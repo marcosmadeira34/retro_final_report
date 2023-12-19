@@ -10,7 +10,12 @@ from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 from database import ConnectPostgresQL, OrdersTable
 from sqlalchemy.exc import IntegrityError
+import logging
 
+
+# configuração do logger
+logging.basicConfig(filename='logs.log', level=logging.INFO,
+                    format='%(asctime)s:%(levelname)s:%(message)s')
 
 
 class FinalReport:
@@ -20,17 +25,17 @@ class FinalReport:
         self.db_connection = ConnectPostgresQL(host)
         self.session = self.db_connection.Session()
 
-    
+    """ Feche a sessão ao destruir a instância da classe """
     def __del__(self):
-        # Feche a sessão ao destruir a instância da classe
+        
         self.session.close()
         self.db_connection.connect().close()
 
-    """ Método para renomear as colunas do arquivo final"""
-    def rename_columns(self):
+    
+    """ função para renomear as colunas do arquivo final"""
+    def rename_columns(self, directory):
         new_names = {
-            'codigo_cliente': 'CODIGO CLIENTE',
-            'cliente': 'CLIENTE',
+            'codigo_cliente': 'CÓDIGO CLIENTE',
             'loja_cliente': 'LOJA CLIENTE',
             'nome_do_cliente': 'NOME DO CLIENTE',
             'cnpj_do_cliente': 'CNPJ DO CLIENTE',
@@ -82,11 +87,23 @@ class FinalReport:
             'vlr_unitario_faturamento': 'VLR UNITARIO FATURAMENTO',
             'vlr_total_faturamento': 'VLR TOTAL FATURAMENTO',
             'periodo_de_faturamento': 'PERIODO DE FATURAMENTO'
+            }
 
-        }
-        return new_names
+        for filename in os.listdir(directory):
+            if filename.endswith('.xlsx'):
+                file_path = os.path.join(directory, filename)
 
-   
+                # Lê o arquivo
+                df = pd.read_exce(file_path, sheet_name='CONSOLIDADO', engine='openpyxl')
+                df.rename(columns=new_names)
+                
+                                
+
+
+
+
+    
+    """ Função para checar novos pedidos e atualizar o banco de dados"""
     def check_and_update_orders(self, extractor_file_path, col):
         start = time.time()
         """Método para verificar e atualizar pedidos ausentes no banco de dados"""
@@ -121,22 +138,32 @@ class FinalReport:
             
         # Cria um DataFrame apenas com os pedidos ausentes
         new_orders_df = extract_df[extract_df[col_lower].isin(new_orders)].copy()
-             
-        # Salva os pedidos ausentes em um arquivo Excel
-        print('Arquivo novos_pedidos.xlsx sendo criado.')
-        path = r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS'
-        for new in new_orders:
-            new_orders_df.to_excel(os.path.join(path, f'{new}_pedido.xlsx'), sheet_name='CONSOLIDADO',
-                                    index=False, engine='openpyxl')         
         
+             
+        # Salva os pedidos ausentes em um arquivo Excel        
+        path = r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS'
+        for index, row in new_orders_df.iterrows():
+            new = row[col_lower]
+            client_name = row['nome_do_cliente']  # Obtém o nome do cliente da primeira linha
+            client_name_valid = client_name.translate(str.maketrans('', '', r'\/:*?"<>|'))  # Remove caracteres inválidos
+
+            file_name = f'{new}_{client_name_valid}.xlsx'
+            file_path = os.path.join(path, file_name)
+
+            new_orders_df.loc[[index]].to_excel(file_path, sheet_name='CONSOLIDADO',
+                                    index=False, engine='openpyxl')
+            print(f'Novo arquivo {new}_{client_name_valid}.xlsx criado.')
+
 
         # Atualiza o banco de dados com os pedidos ausentes
         try:
             if not new_orders_df.empty:
-                new_orders_df.to_sql(OrdersTable.__tablename__, self.db_connection.engine, if_exists='append', index=False, method='multi')            
+                new_orders_df.to_sql(OrdersTable.__tablename__, self.db_connection.engine, if_exists='append', index=False, method='multi')
+
         except IntegrityError as e:
             print('Banco de dados atualizado com novos pedidos')
 
+       
         # pula o processamento dos clientes abaixo (grandes clientes)
         special_clients = ['ASF - MATRIZ', 'SOUZA CRUZ', 'METALFRIO', 'M. DIAS', 'EBD MATRIZ', 'QUALICICLO AGRICOLA S/A',
                                 'LOCALIZA BELO HORIZONTE MG - MATRIZ', 'SPDM - HOSPITAL MUNICIPAL VEREADOR JOSE STOROPOLLI',
@@ -181,9 +208,7 @@ class FinalReport:
         print(f'Tempo de execução do código: {end - start}')
     
           
-
-
-    """ Método que cria um arquivo único do cliente com todos os pedidos"""
+    """ Função que cria um arquivo único do cliente com todos os pedidos"""
     def merge_same_client(self, news_orders, output_path):
         # Inicia o contador de tempo de execução do método
         start_time = time.time()
@@ -206,18 +231,14 @@ class FinalReport:
         print(f'Tempo de execução: {end_time - start_time}')
 
     
-    
-    """ Método que formata o arquivo final com cores da Arklok"""
+    """ Função que formata o arquivo final com cores da Arklok"""
     def color_dataframe(self):
         pass
 
-    
-    
-
-   
 
 
 
+# Classe para processar e listar arquivos do diretório
 class FileProcessor:
     # Definindo atributos da classe
     def __init__(self, extractor_file_path, invoiced_orders, news_orders, output_merge_path):
@@ -316,11 +337,57 @@ class FileProcessor:
             print(f'Ocorreu um erro no arquivo {self.news_orders}: {e}')
             return False
 
+    # Criar pastas no diretório H:\\
+    def make_folders_clients(self, batch_totvs_path, extractor_path, sheet_name, col):
+        df = pd.read_excel(extractor_path, sheet_name, engine='openpyxl')
+        basedir = batch_totvs_path
+        
+        for client in df[col]:
+            client_path = os.path.join(basedir, client)
+            
+            if not os.path.exists(client_path):
+                os.makedirs(client_path)
+                print(f'Pasta {client} criada com sucesso!')
+            else:
+                print(f'Pasta {client} já existe!')
 
+    # função para excluir todos os arquivos da pasta copied_files
+    def delete_new_files(self, files_path):
+        logging.info(f"INICIANDO ROTINA 2 - EXCLUINDO ARQUIVOS DA PASTA COPIED_FILES...")
+        # verifica se a pasta existe
+        if not os.path.exists(files_path):
+            logging.info(f"A pasta {files_path} não existe.")
+            return
+
+        try:
+            # lista todos os arquivos no diretório
+            file_list = [f for f in os.listdir(files_path) if f.endswith('.xlsx') and not f.startswith('~$')]
+            # itera sobre cada arquivo no diretório
+            for file_name in file_list:
+                # caminho completo do arquivo
+                input_file_path = os.path.join(files_path, file_name)
+                # verifica se o arquivo existe e tem permissões de leitura
+                if os.path.isfile(input_file_path) and os.access(input_file_path, os.R_OK):
+                    # exclui o arquivo
+                    os.remove(input_file_path)
+                    print(f"Arquivo {file_name} excluído com sucesso!")
+                else:
+                    print(f"Arquivo {file_name} não encontrado ou permissão negada.")
+            print(Fore.WHITE + "EXCLUSÃO DE ARQUIVOS FINALIZADA..." + Fore.RESET)
+            logging.info(f"ROTINA 2 - EXCLUSÃO DE ARQUIVOS FINALIZADA...")
+            return True
+        except PermissionError as e:
+            print(f"O arquivo {self.folder} está aberto: {e}")
+            logging.error(f"Erro de permissão para abrir o arquivo {self.folder}. Arquivo aberto : {e}")
+            return False
+        except Exception as e:
+            print(f"Ocorreu um erro ao excluir os arquivos: {e}")
+            logging.error(f"Ocorreu um erro ao excluir os arquivos: {e}")
+            return False 
+            
 
         
 
-                    
 
 
 

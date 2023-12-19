@@ -126,7 +126,7 @@ class ConnectPostgresQL:
                 record = table(**kwargs)
                 session.add(record)
                 session.commit()
-                print(Fore.GREEN + f'Dados {value} inseridos com sucesso!' + Fore.RESET)
+                print(Fore.GREEN + f'Dados {key} inseridos com sucesso!' + Fore.RESET)
             
         # caso o registro já exista no banco de dados, não insere novamente
         except IntegrityError as e:

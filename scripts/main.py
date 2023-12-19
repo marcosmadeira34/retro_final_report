@@ -8,7 +8,7 @@ import art
 ascii_banner = art.text2art("Relatorio de Pedidos")
 colored_banner = cprint(ascii_banner, 'green')
 
-
+batch_totvs_path = r'H:\01 - FATURAMENTO\RELATORIO-TOTVS_2024'
 extractor_file_path = r"C:\DataWare\data\consolidated_files\consolidated_validated\EXTRATOR_OFICIAL.xlsx" # EXTRATOR
 #verificar se o pedido já foi faturado no banco de dados PostgresQL
 invoiced_orders = r'C:\DataWare\data\consolidated_files\consolidated_validated\PEDIDOS_FATURADOS' # PEDIDOS FATURADOS NO BANCO DE DADOS
@@ -33,8 +33,12 @@ if __name__ == "__main__":
         print('------------------------------------------------\n')
 
         print(' 1 - Checar novos pedidos\n',
-              '2 - Listar novos pedidos\n',
+              '2 - Extrato de novos pedidos\n',
               '3 - Inserir novos pedidos no banco de dados\n',
+              '4 - Criar pastas para cada cliente diretório H:\n',
+              '5 - Criar novo banco de dados\n',
+              '6 - Deletar pedidos do diretório Novos Pedidos\n',
+              
              
               )
 
@@ -52,7 +56,8 @@ if __name__ == "__main__":
 
             elif option == 2:
                 file_processor.list_all_files(news_orders)
-
+                final_report.rename_columns(r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS')
+                print('Colunas renomeadas com sucesso!')
 
             elif option == 3:
                 sql.create_database()
@@ -121,15 +126,21 @@ if __name__ == "__main__":
                     except Exception as e:                    
                         print(f'Erro ao inserir dados no banco de dados: {e}')
                 
-            elif option == 17:
-                print('Sair')
-                break
+            elif option == 4:
+                files = file_processor.make_folders_clients(batch_totvs_path=batch_totvs_path,
+                                                            extractor_path=extractor_file_path,
+                                                            sheet_name="2-Resultado", col="Nome do Cliente")
+            elif option == 5:
+                sql.create_database()
+
+            elif option == 6:
+                file_processor.delete_new_files(files_path=news_orders)
+                
             else:
                 print('Opção inválida')
         except ValueError:
             print('Opção inválida')
 
-            
 
 
 
@@ -138,8 +149,5 @@ if __name__ == "__main__":
 
 
 
-    # CHAMA FUNÇÃO 1
-    final_report.check_orders(extractor_file_path, invoiced_orders, 'PEDIDO')
 
-    # CHAMA FUNÇÃO 2
-    #final_report.merge_same_client(directory, output_merge_path)
+
