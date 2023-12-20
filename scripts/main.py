@@ -4,6 +4,7 @@ from check_orders import *
 from colorama import Fore
 from termcolor import cprint
 import art
+from time import sleep
 
 ascii_banner = art.text2art("Relatorio de Pedidos")
 colored_banner = cprint(ascii_banner, 'green')
@@ -14,6 +15,8 @@ extractor_file_path = r"C:\DataWare\data\consolidated_files\consolidated_validat
 invoiced_orders = r'C:\DataWare\data\consolidated_files\consolidated_validated\PEDIDOS_FATURADOS' # PEDIDOS FATURADOS NO BANCO DE DADOS
 news_orders = r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS' # NOVOS PEDIDOS IDENTIFICADOS NO EXTRATOR
 output_merge_path = r'C:\DataWare\data\consolidated_files\consolidated_validated\MERGE_RELATÓRIO_FINAL' # RELATÓRIO FINAL 
+source_directory = r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS' # DIRETÓRIO DE ORIGEM DOS PEDIDOS
+target_directory = r'H:\01 - FATURAMENTO\RELATORIO-TOTVS_2024' # DIRETÓRIO DE DESTINO DOS PEDIDOS
 
 
 file_processor = FileProcessor(extractor_file_path, invoiced_orders, news_orders, output_merge_path)
@@ -38,7 +41,7 @@ if __name__ == "__main__":
               '4 - Criar pastas para cada cliente diretório H:\n',
               '5 - Criar novo banco de dados\n',
               '6 - Deletar pedidos do diretório Novos Pedidos\n',
-              
+              '7 - Mover pedidos para diretório H:\n',              
              
               )
 
@@ -47,13 +50,17 @@ if __name__ == "__main__":
 
             if option == 1:
                 # CHAMA FUNÇÃO 1
+                sql.create_database()
+                sleep(0.5)
                 final_report.check_and_update_orders(extractor_file_path, 'pedido_faturamento')
+                sleep(0.5)
+                final_report.rename_color_columns(r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS')
+                #final_report.rename_columns(r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS')
+                print('Colunas renomeadas com sucesso!')
+                sleep(0.5)
+                file_processor.move_file_to_client_folder(source_directory=source_directory, target_directory=target_directory)
             
-            #elif option == 2:
-            #   print('Gerando relatório final...')
-                # CHAMA FUNÇÃO 2
-            #  final_report.merge_same_client(news_orders, output_merge_path)
-
+            
             elif option == 2:
                 file_processor.list_all_files(news_orders)
                 final_report.rename_columns(r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS')
@@ -135,6 +142,13 @@ if __name__ == "__main__":
 
             elif option == 6:
                 file_processor.delete_new_files(files_path=news_orders)
+
+            elif option == 7:
+                file_processor.move_file_to_client_folder(source_directory=source_directory,
+                                                          target_directory=target_directory)
+            elif option == 8:
+                final_report.rename_columns(r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS')
+                print('Colunas renomeadas com sucesso!')
                 
             else:
                 print('Opção inválida')

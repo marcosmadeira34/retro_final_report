@@ -71,9 +71,6 @@ class OrdersTable(Base):
     periodo_de_faturamento = Column(String)
 
     
-
-
-
 class OrdersClass:
     def __init__(self, table_name):
         self.__table_name__ = table_name
@@ -133,6 +130,26 @@ class ConnectPostgresQL:
             pass
 
         # caso ocorra algum erro, exibe o erro    
+        except Exception as e:
+            raise e
+
+        # fecha a conexão com o banco de dados
+        finally:
+            if session:
+                session.close()
+
+    
+    # função para exclusão de dados da tabela
+    def delete_data(self, table_name, id):
+        try:
+            table = OrdersClass(table_name).Table
+
+            with self.Session() as session:
+                session.query(table).filter(table.id == id).delete()
+                session.commit()
+                print(Fore.GREEN + f'Dados {id} excluídos com sucesso!' + Fore.RESET)
+
+        # caso ocorra algum erro, exibe o erro
         except Exception as e:
             raise e
 

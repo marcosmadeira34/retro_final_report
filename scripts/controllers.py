@@ -11,6 +11,7 @@ from concurrent.futures import ThreadPoolExecutor
 from database import ConnectPostgresQL, OrdersTable
 from sqlalchemy.exc import IntegrityError
 import logging
+import shutil 
 
 
 # configuração do logger
@@ -31,7 +32,6 @@ class FinalReport:
         self.session.close()
         self.db_connection.connect().close()
 
-    
     """ função para renomear as colunas do arquivo final"""
     def rename_columns(self, directory):
         new_names = {
@@ -94,15 +94,9 @@ class FinalReport:
                 file_path = os.path.join(directory, filename)
 
                 # Lê o arquivo
-                df = pd.read_exce(file_path, sheet_name='CONSOLIDADO', engine='openpyxl')
-                df.rename(columns=new_names)
-                
-                                
+                df = pd.read_excel(file_path, sheet_name='CONSOLIDADO', engine='openpyxl')
+                df = df.rename(columns=new_names)
 
-
-
-
-    
     """ Função para checar novos pedidos e atualizar o banco de dados"""
     def check_and_update_orders(self, extractor_file_path, col):
         start = time.time()
@@ -134,34 +128,32 @@ class FinalReport:
         
         # Identifica os pedidos ausentes
         new_orders = set(extract_df[col_lower]) - existing_orders
-        print(f'Total de novos pedidos no extrator: {len(new_orders)}\n')       
+        print(f'Total de novos pedidos no extrator: {len(new_orders)}\n')   
+
+        # Reinicializa a variável new_orders_df
+        new_orders_df = pd.DataFrame()    
             
         # Cria um DataFrame apenas com os pedidos ausentes
         new_orders_df = extract_df[extract_df[col_lower].isin(new_orders)].copy()
-        
-             
-        # Salva os pedidos ausentes em um arquivo Excel        
-        path = r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS'
-        for index, row in new_orders_df.iterrows():
-            new = row[col_lower]
-            client_name = row['nome_do_cliente']  # Obtém o nome do cliente da primeira linha
-            client_name_valid = client_name.translate(str.maketrans('', '', r'\/:*?"<>|'))  # Remove caracteres inválidos
 
-            file_name = f'{new}_{client_name_valid}.xlsx'
-            file_path = os.path.join(path, file_name)
+        # Verifica se há novos pedidos antes de continuar
+        if not new_orders_df.empty:
+            # Salva os pedidos ausentes em arquivos Excel agrupados por número de pedido
+            path = r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS'
+            for order_number, order_group in new_orders_df.groupby(col_lower):
+                client_name_valid = order_group['nome_do_cliente'].iloc[0].translate(str.maketrans('', '', r'\/:*?"<>|'))
+                file_name = f'{order_number}_{client_name_valid}.xlsx'
+                file_path = os.path.join(path, file_name)
 
-            new_orders_df.loc[[index]].to_excel(file_path, sheet_name='CONSOLIDADO',
-                                    index=False, engine='openpyxl')
-            print(f'Novo arquivo {new}_{client_name_valid}.xlsx criado.')
+                order_group.to_excel(file_path, sheet_name='CONSOLIDADO', index=False, engine='openpyxl')
+                print(f'Novo arquivo {file_name} criado.')
 
-
-        # Atualiza o banco de dados com os pedidos ausentes
-        try:
-            if not new_orders_df.empty:
+            # Atualiza o banco de dados com os pedidos ausentes
+            try:
                 new_orders_df.to_sql(OrdersTable.__tablename__, self.db_connection.engine, if_exists='append', index=False, method='multi')
-
-        except IntegrityError as e:
-            print('Banco de dados atualizado com novos pedidos')
+                print('Banco de dados atualizado com novos pedidos')
+            except IntegrityError as e:
+                print('Erro ao atualizar o banco de dados:', e)
 
        
         # pula o processamento dos clientes abaixo (grandes clientes)
@@ -207,7 +199,6 @@ class FinalReport:
         end = time.time()
         print(f'Tempo de execução do código: {end - start}')
     
-          
     """ Função que cria um arquivo único do cliente com todos os pedidos"""
     def merge_same_client(self, news_orders, output_path):
         # Inicia o contador de tempo de execução do método
@@ -230,13 +221,78 @@ class FinalReport:
         end_time = time.time()
         print(f'Tempo de execução: {end_time - start_time}')
 
-    
-    """ Função que formata o arquivo final com cores da Arklok"""
-    def color_dataframe(self):
-        pass
+    """ Função que renomeia e formata o arquivo final com cores da Arklok"""
+    def rename_color_columns(self, directory):
+        new_names = {
+            'codigo_cliente': 'CÓDIGO CLIENTE',
+            'loja_cliente': 'LOJA CLIENTE',
+            'nome_do_cliente': 'NOME DO CLIENTE',
+            'cnpj_do_cliente': 'CNPJ DO CLIENTE',
+            'cnpj_de_faturamento': 'CNPJ DE FATURAMENTO',
+            'cnpj_de_remessa': 'CNPJ DE REMESSA',
+            'equipamento': 'EQUIPAMENTO',
+            'nota_de_remessa': 'NOTA DE REMESSA',
+            'data_de_remessa': 'DATA DE REMESSA',
+            'serie_da_nf_remessa': 'SERIE DA NF REMESSA',
+            'produto': 'PRODUTO',
+            'descricao_do_produto': 'DESCRICAO DO PRODUTO',
+            'quantidade': 'QUANTIDADE',
+            'pedido_de_remessa': 'PEDIDO DE REMESSA',
+            'projeto': 'PROJETO',
+            'obra': 'OBRA',
+            'prazo_do_contrato': 'PRAZO DO CONTRATO',
+            'data_de_ativacao': 'DATA DE ATIVACAO',
+            'periodo_inicial': 'PERIODO INICIAL',
+            'periodo_final': 'PERIODO FINAL',
+            'data_do_termo': 'DATA DO TERMO',
+            'aniversario': 'ANIVERSARIO',
+            'desc_ajuste': 'DESC AJUSTE',
+            'indice_aplicado': 'INDICE APLICADO',
+            'dias_de_locacao': 'DIAS DE LOCACAO',
+            'valor_de_origem': 'VALOR DE ORIGEM',
+            'valor_unitario': 'VALOR UNITARIO',
+            'valor_bruto': 'VALOR BRUTO',
+            'tipo_do_mes': 'TIPO DO MES',
+            'nr_chamado': 'NR CHAMADO',
+            'contrato_legado': 'CONTRATO LEGADO',
+            'acrescimo': 'ACRESCIMO',
+            'franquia': 'FRANQUIA',
+            'id_equipamento': 'ID EQUIPAMENTO',
+            'id_equip_substituido': 'ID EQUIP SUBSTITUIDO',
+            'data_da_substituicao': 'DATA DA SUBSTITUICAO',
+            'data_proximo_faturamento': 'DATA PROXIMO FATURAMENTO',
+            'data_inicio': 'DATA INICIO',
+            'data_fim_locacao': 'DATA FIM LOCACAO',
+            'tipo_de_servico': 'TIPO DE SERVICO',
+            'email': 'E-MAIL',
+            'descricao_do_ajuste': 'DESCRICAO DO AJUSTE',
+            'nome_da_obra': 'NOME DA OBRA',
+            'numero_da_as': 'NUMERO DA AS',
+            'pedido_faturamento': 'PEDIDO FATURAMENTO',
+            'nf_de_faturamento': 'NF DE FATURAMENTO',
+            'serie_de_faturamento': 'SERIE DE FATURAMENTO',
+            'data_de_faturamento': 'DATA DE FATURAMENTO',
+            'qtde_faturamento': 'QTDE FATURAMENTO',
+            'vlr_unitario_faturamento': 'VLR UNITARIO FATURAMENTO',
+            'vlr_total_faturamento': 'VLR TOTAL FATURAMENTO',
+            'periodo_de_faturamento': 'PERIODO DE FATURAMENTO'
+            }
+        
+        
+        for filename in os.listdir(directory):
+            if filename.endswith('.xlsx'):
+                file_path = os.path.join(directory, filename)
 
+                # Lê o arquivo
+                df = pd.read_excel(file_path, sheet_name='CONSOLIDADO', engine='openpyxl')
+                df = df.rename(columns=new_names)
 
+                """ # formatar as colunas renomeadas com as cores da Arklok
+                df.style.applymap(lambda x: 'background-color: #DB161D', subset=new_names.values()) """
 
+                df.to_excel(file_path, sheet_name='CONSOLIDADO', index=False, engine='openpyxl')
+
+                                
 
 # Classe para processar e listar arquivos do diretório
 class FileProcessor:
@@ -385,6 +441,34 @@ class FileProcessor:
             logging.error(f"Ocorreu um erro ao excluir os arquivos: {e}")
             return False 
             
+    # função para distribuir os arquivos por cliente
+    def move_file_to_client_folder(self, source_directory, target_directory):
+       
+        # diretório de origem dos arquivos (NOVOS_PEDIDOS)
+        path = source_directory
+        
+        for filename in os.listdir(path):
+            # caminho completo do arquivo de origem que será movido
+            full_source = os.path.join(path, filename)
+
+            # extrai o nome do cliente do arquivo
+            client_name = filename.split('_')[1].split('.')[0]
+
+            # diretório de destino do arquivo
+            target_path =  os.path.join(target_directory, client_name)
+            os.makedirs(target_path, exist_ok=True)
+
+            target_path_file = os.path.join(target_path, filename)
+
+            if not os.path.exists(target_path_file):
+                # move o arquivo para o diretório de destino
+                shutil.move(full_source, target_path)
+                print(f'Movendo arquivo {filename} para {target_path}...')
+            else:
+                print(Fore.GREEN + f'Arquivo {filename} já existe no diretório {target_path}! Igornando arquivo...' + Fore.RESET)
+
+
+    
 
         
 
