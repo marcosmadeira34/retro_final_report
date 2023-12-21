@@ -16,7 +16,7 @@ invoiced_orders = r'C:\DataWare\data\consolidated_files\consolidated_validated\P
 news_orders = r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS' # NOVOS PEDIDOS IDENTIFICADOS NO EXTRATOR
 output_merge_path = r'C:\DataWare\data\consolidated_files\consolidated_validated\MERGE_RELATÓRIO_FINAL' # RELATÓRIO FINAL 
 source_directory = r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS' # DIRETÓRIO DE ORIGEM DOS PEDIDOS
-target_directory = r'H:\01 - FATURAMENTO\RELATORIO-TOTVS_2024' # DIRETÓRIO DE DESTINO DOS PEDIDOS
+target_directory = r'C:\DataWare\data\consolidated_files\consolidated_validated\PEDIDOS_MOVIDOS' # DIRETÓRIO DE DESTINO DOS PEDIDOS
 
 
 file_processor = FileProcessor(extractor_file_path, invoiced_orders, news_orders, output_merge_path)
@@ -41,7 +41,8 @@ if __name__ == "__main__":
               '4 - Criar pastas para cada cliente diretório H:\n',
               '5 - Criar novo banco de dados\n',
               '6 - Deletar pedidos do diretório Novos Pedidos\n',
-              '7 - Mover pedidos para diretório H:\n',              
+              '7 - Mover pedidos para diretório H:\n',   
+              '8 - Renomear e formatar colunas\n'           
              
               )
 
@@ -52,24 +53,30 @@ if __name__ == "__main__":
                 # CHAMA FUNÇÃO 1
                 sql.create_database()
                 sleep(0.5)
+                print(Fore.GREEN + 'CHECANDO NOVOS PEDIDOS ...' + Fore.RESET)
                 final_report.check_and_update_orders(extractor_file_path, 'pedido_faturamento')
                 sleep(0.5)
-                final_report.rename_color_columns(r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS')
+                print(Fore.GREEN + 'PEDIDOS CHECADOS COM SUCESSO!' + Fore.RESET)
+                print(Fore.GREEN + 'RENOMEANDO E FORMATANDO COLUNAS' + Fore.RESET)
+                final_report.rename_format_columns(news_orders)
                 #final_report.rename_columns(r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS')
-                print('Colunas renomeadas com sucesso!')
+                print(Fore.GREEN + 'COLUNAS RENOMEADAS E FORMATADAS COM SUCESSO!' + Fore.RESET)
                 sleep(0.5)
+                print(Fore.GREEN + 'MOVENDO PEDIDOS PARA DIRETÓRIO H:\ ...' + Fore.RESET)
                 file_processor.move_file_to_client_folder(source_directory=source_directory, target_directory=target_directory)
-            
+                print(Fore.GREEN + 'PEDIDOS MOVIDOS COM SUCESSO PARA RESPECTIVAS PASTA!' + Fore.RESET)
+                sleep(0.5)
+                file_processor.delete_new_files(files_path=news_orders)
+                print(Fore.LIGHTYELLOW_EX + 'AUTOMAÇÃO CONCLUÍDA!' + Fore.RESET)
             
             elif option == 2:
                 file_processor.list_all_files(news_orders)
-                final_report.rename_columns(r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS')
+                final_report.rename_columns(news_orders)
                 print('Colunas renomeadas com sucesso!')
 
             elif option == 3:
                 sql.create_database()
-                df_news_orders = pd.read_excel(r'C:\DataWare\data\consolidated_files\consolidated_validated\EXTRATOR_OFICIAL.xlsx', 
-                                            sheet_name='2-Resultado', engine='openpyxl')
+                df_news_orders = pd.read_excel(extractor_file_path, sheet_name='2-Resultado', engine='openpyxl')
                 
                 df_news_orders = df_news_orders.astype(str)
 
@@ -147,13 +154,13 @@ if __name__ == "__main__":
                 file_processor.move_file_to_client_folder(source_directory=source_directory,
                                                           target_directory=target_directory)
             elif option == 8:
-                final_report.rename_columns(r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS')
+                final_report.rename_format_columns(news_orders)
                 print('Colunas renomeadas com sucesso!')
                 
             else:
                 print('Opção inválida')
-        except ValueError:
-            print('Opção inválida')
+        except Exception as e:
+            print(e)
 
 
 

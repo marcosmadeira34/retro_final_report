@@ -8,7 +8,7 @@ from sqlalchemy.exc import IntegrityError
 
 Base = declarative_base()
 
-
+# classe para definir a tabela no banco de dados
 class OrdersTable(Base):
     # nome da tabela no banco de dados
     __tablename__ = 'pedidosfaturados'
@@ -70,13 +70,15 @@ class OrdersTable(Base):
     vlr_total_faturamento = Column(String)
     periodo_de_faturamento = Column(String)
 
-    
+
+# classe para definir o nome da tabela no banco de dados    
 class OrdersClass:
     def __init__(self, table_name):
         self.__table_name__ = table_name
         self.Table = OrdersTable
 
 
+# classe para conexão com o banco de dados
 class ConnectPostgresQL:
     # definindo construtor de classe com o parâmetros de conexão
     def __init__(self, host):
@@ -85,11 +87,11 @@ class ConnectPostgresQL:
         self.Session = sessionmaker(bind=self.engine)
         
 
-    
+    # função para conexão com o banco de dados(PostgreSQL) self.engine.connect()
     def connect(self):
         return self.engine.connect()
 
-
+    # função para criação do banco de dados e tabela
     def create_database(self):
         try:
             # inspeciona se a tabela existe no banco de dados
@@ -104,7 +106,7 @@ class ConnectPostgresQL:
             print(f'Erro ao criar banco de dados e tabel {OrdersTable.__tablename__}: {e}')
 
 
-    
+    # função para inserção de dados na tabela
     def insert_data(self, table_name, **kwargs):
         try:
             table = OrdersClass(table_name).Table
@@ -158,6 +160,47 @@ class ConnectPostgresQL:
             if session:
                 session.close()
            
+
+    # função para atualização de dados da tabela
+    def update_data(self, table_name, id):
+        try:
+            table = OrdersClass(table_name).Table
+
+            with self.Session() as session:
+                session.query(table).filter(table.id == id).update()
+                session.commit()
+                print(Fore.GREEN + f'Dados {id} atualizados com sucesso!' + Fore.RESET)
+
+        # caso ocorra algum erro, exibe o erro                
+        except Exception as e:
+            raise e
+        
+        # fecha a conexão com o banco de dados
+        finally:
+            if session:
+                session.close()
+
+
+    # função para consulta de dados da tabela
+    def query_data(self, table_name, query):
+        try:
+            table = OrdersClass(table_name).Table
+
+            with self.Session() as session:
+                result = session.query(table).filter(query).all()
+                return result
+
+        # caso ocorra algum erro, exibe o erro                
+        except Exception as e:
+            raise e
+        
+        # fecha a conexão com o banco de dados
+        finally:
+            if session:
+                session.close()
+
+    
+
 
 
 

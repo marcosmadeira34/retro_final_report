@@ -12,6 +12,7 @@ from database import ConnectPostgresQL, OrdersTable
 from sqlalchemy.exc import IntegrityError
 import logging
 import shutil 
+import re
 
 
 # configuração do logger
@@ -32,6 +33,58 @@ class FinalReport:
         self.session.close()
         self.db_connection.connect().close()
 
+    def formatar_cnpj(self, cnpj):
+        # Verifica se o CNPJ é uma string válida
+        if isinstance(cnpj, str) and len(cnpj) == 14 and cnpj.isdigit():
+            # Aplica a formatação
+            cnpj_formatado = f"{cnpj[:2]}.{cnpj[2:5]}.{cnpj[5:8]}/{cnpj[8:12]}-{cnpj[12:]}"
+            return cnpj_formatado
+        else:
+            return cnpj
+    
+    # função para formatar as células do arquivo final
+    def format_cells(self, path):
+        """ função esta sendo usada na função rename_format_columns"""
+
+        # define o diretório
+        directory = path
+        # percorre o diretório e localiza os arquivos excel
+        for filename in os.listdir(directory):
+            if filename.endswith('.xlsx'):
+                # caminho completo do arquivo
+                file_path = os.path.join(directory, filename)
+                # Lê o arquivo
+                df = pd.read_excel(file_path, sheet_name='CONSOLIDADO', engine='openpyxl')
+                
+                # seleciona as colunas que serão formatadas
+                cnpj_cols = []
+                try:
+                    # itera sobre as colunas e aplica a função formatar_cnpj
+                    for col in cnpj_cols:
+                        df[col] = df[col].apply(self.formatar_cnpj)
+
+                    # itera sobre as colunas e aplica a função strip e strftime    
+                    for col in df.columns:
+                        # Verifica se a coluna é do tipo string antes de aplicar .str
+                        if pd.api.types.is_string_dtype(df[col]):
+                            df[col] = df[col].str.strip()
+                        elif pd.api.types.is_numeric_dtype(df[col]):
+                            # Converte colunas numéricas para string antes de usar .str
+                            df[col] = df[col].astype(str).str.strip()
+
+                        # Verifica se a coluna é do tipo datetime antes de formatar
+                        if pd.api.types.is_datetime64_any_dtype(df[col]):
+                            df[col] = df[col].dt.strftime('%d/%m/%Y')                
+                        # Retorna o DataFrame modificado
+                        print(f'Formatando coluna {col}...')
+                        return df
+                    
+                # caso ocorra algum erro, exibe o erro    
+                except Exception as e:
+                    print(f"Erro ao formatar colunas: {e}")
+                    return None
+                    
+                
     """ função para renomear as colunas do arquivo final"""
     def rename_columns(self, directory):
         new_names = {
@@ -91,12 +144,16 @@ class FinalReport:
 
         for filename in os.listdir(directory):
             if filename.endswith('.xlsx'):
+                # caminho completo do arquivo
                 file_path = os.path.join(directory, filename)
-
                 # Lê o arquivo
                 df = pd.read_excel(file_path, sheet_name='CONSOLIDADO', engine='openpyxl')
+                # renomeia as colunas
                 df = df.rename(columns=new_names)
+                # Salva o DataFrame em um arquivo excel
+                df.to_excel(file_path, sheet_name='CONSOLIDADO', index=False, engine='openpyxl')
 
+    
     """ Função para checar novos pedidos e atualizar o banco de dados"""
     def check_and_update_orders(self, extractor_file_path, col):
         start = time.time()
@@ -138,13 +195,19 @@ class FinalReport:
 
         # Verifica se há novos pedidos antes de continuar
         if not new_orders_df.empty:
-            # Salva os pedidos ausentes em arquivos Excel agrupados por número de pedido
+            # caminho do diretório NOVOS_PEDIDOS
             path = r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS'
+            # cria o diretório NOVOS_PEDIDOS se não existir
+            os.makedirs(path, exist_ok=True)
+            # percorre o DataFrame agrupando os pedidos por cliente
             for order_number, order_group in new_orders_df.groupby(col_lower):
+                # remove caracteres inválidos do nome do cliente e cria o nome do arquivo
                 client_name_valid = order_group['nome_do_cliente'].iloc[0].translate(str.maketrans('', '', r'\/:*?"<>|'))
+                # define o nome e cria o arquivo
                 file_name = f'{order_number}_{client_name_valid}.xlsx'
+                # caminho completo do arquivo para salvar
                 file_path = os.path.join(path, file_name)
-
+                # salva o arquivo em excel
                 order_group.to_excel(file_path, sheet_name='CONSOLIDADO', index=False, engine='openpyxl')
                 print(f'Novo arquivo {file_name} criado.')
 
@@ -159,6 +222,7 @@ class FinalReport:
         # pula o processamento dos clientes abaixo (grandes clientes)
         special_clients = ['ASF - MATRIZ', 'SOUZA CRUZ', 'METALFRIO', 'M. DIAS', 'EBD MATRIZ', 'QUALICICLO AGRICOLA S/A',
                                 'LOCALIZA BELO HORIZONTE MG - MATRIZ', 'SPDM - HOSPITAL MUNICIPAL VEREADOR JOSE STOROPOLLI',
+                                'SPDM - ASSOCIACAO PAULISTA PARA O DESENV',
                                 'SONDA', 'BRINKS SEGURANCA - MATRIZ', 'FUNDAÇÃO EDUCACIONAL SEVERINO SOMBRA',
                                 'SPDM - HOSPITAL MUNICIPAL DR. IGNACIO PROENCA DE GOUVEA',
                                 'SPDM - HOSPITAL MUNICIPAL DR. JOSE DE CARVALHO FLORENCE',
@@ -199,6 +263,7 @@ class FinalReport:
         end = time.time()
         print(f'Tempo de execução do código: {end - start}')
     
+    
     """ Função que cria um arquivo único do cliente com todos os pedidos"""
     def merge_same_client(self, news_orders, output_path):
         # Inicia o contador de tempo de execução do método
@@ -221,8 +286,10 @@ class FinalReport:
         end_time = time.time()
         print(f'Tempo de execução: {end_time - start_time}')
 
+    
     """ Função que renomeia e formata o arquivo final com cores da Arklok"""
-    def rename_color_columns(self, directory):
+    def rename_format_columns(self, directory):
+        # dicionário com os nomes das colunas (chave) e os nomes formatados (valor
         new_names = {
             'codigo_cliente': 'CÓDIGO CLIENTE',
             'loja_cliente': 'LOJA CLIENTE',
@@ -278,20 +345,26 @@ class FinalReport:
             'periodo_de_faturamento': 'PERIODO DE FATURAMENTO'
             }
         
-        
-        for filename in os.listdir(directory):
-            if filename.endswith('.xlsx'):
-                file_path = os.path.join(directory, filename)
-
-                # Lê o arquivo
-                df = pd.read_excel(file_path, sheet_name='CONSOLIDADO', engine='openpyxl')
-                df = df.rename(columns=new_names)
-
-                """ # formatar as colunas renomeadas com as cores da Arklok
-                df.style.applymap(lambda x: 'background-color: #DB161D', subset=new_names.values()) """
-
-                df.to_excel(file_path, sheet_name='CONSOLIDADO', index=False, engine='openpyxl')
-
+        try:
+            # percorre o diretório e localiza os arquivos excel 
+            for filename in os.listdir(directory):
+                if filename.endswith('.xlsx'):
+                    # caminho completo do arquivo
+                    file_path = os.path.join(directory, filename)
+                    # Lê o arquivo
+                    df = pd.read_excel(file_path, sheet_name='CONSOLIDADO', engine='openpyxl')
+                    # formata as células                
+                    df = self.format_cells(directory)              
+                    
+                    # renomeia as colunas
+                    df = df.rename(columns=new_names)
+                    # salva o arquivo em excel
+                    df.to_excel(file_path, sheet_name='CONSOLIDADO', index=False, engine='openpyxl')
+        except PermissionError as e:
+            print(f"O arquivo {filename} está aberto: {e}")
+            print('Feche o arquivo manualmente e tente novamente.')
+            return False
+                
                                 
 
 # Classe para processar e listar arquivos do diretório
@@ -305,21 +378,28 @@ class FileProcessor:
 
     # Método para obter os arquivos
     def get_files(self, file_type='.xlsx'):
+        # percorre o diretório e retorna uma lista de arquivos com o caminho completo usando list comprehension
         return [(root, file) for root, dirs, files in os.walk(self.news_orders) \
                 for file in files if file.endswith(file_type    )]
 
     # Método para processar os arquivos
     def process_file_list(self, filo_info):
+        
+        # obtém o caminho completo do arquivo
         root, file = filo_info
         full_path = os.path.join(root, file)
         
+        # cria uma lista vazia
         xlsx_files = []
         
+        # verifica se o arquivo é um arquivo excel e não é um arquivo temporário
         if file.lower().endswith('.xlsx') \
             and not file.startswith('~$'):
-        
             print(f'{Fore.LIGHTCYAN_EX}Arquivo encontrado em: {full_path}{Fore.RESET}')
-            sys.stdout.flush() # Limpa o buffer de saída
+
+            # limpa o buffer de saída    
+            sys.stdout.flush() 
+            # adiciona o arquivo na lista de arquivos
             xlsx_files.append(full_path)
 
             # Obtem informações do arquivo
@@ -331,7 +411,7 @@ class FileProcessor:
             file_date_modified = datetime.fromtimestamp(file_status.st_mtime).strftime('%d/%m/%Y %H:%M:%S')
             full_path_file = os.path.join(file_path, filename)
             
-            
+            # retorna um dicionário com as informações do arquivo
             return {
                 
                 'FILENAME': filename,
@@ -347,8 +427,11 @@ class FileProcessor:
         
    # Método para processar os arquivos em paralelo (multithreading) 
     def process_files_in_parallel(self, file_infos):
-        with ThreadPoolExecutor() as executor:
+        # Cria um pool de threads
+        with ThreadPoolExecutor() as executor:            
+            # Processa os arquivos em paralelo com o método map (função, iterável)
             results = executor.map(self.process_file_list, file_infos)
+        # retorna os resultados usando list comprehension
         return [result for result in results if result is not None]
     
     # Método para listar os arquivos
@@ -357,19 +440,27 @@ class FileProcessor:
         # verficar se o diretório existe
         if not os.path.exists(output_folder):
             print(f'A pasta {output_folder} não existe')
+            # se não existir, cria o diretório
             os.makedirs(output_folder)
             print(f'Criando a pasta {output_folder}')
             return 
         
+        # 
         try:
-
+            # lista todos os arquivos no diretório
             file_infos = self.get_files()
+            
+            # processa os arquivos em paralelo
             file_list = self.process_files_in_parallel(file_infos)
+            # itera sobre cada arquivo
             for file_info in file_infos:
                 try:
                     processed_file = self.process_file_list(file_info)
+                    # verifica se o arquivo foi processado
                     if processed_file is not None:
+                        # adiciona o arquivo na lista de arquivos
                         file_list.append(processed_file)
+                # caso ocorra algum erro, exibe o erro        
                 except FileNotFoundError as e:
                     print(f'Arquivo não encontrado: {e}')
                     continue
@@ -385,23 +476,31 @@ class FileProcessor:
             elapsed_time = end_time - start_time
             print(f'Rotina Listagem novos pedidos finalizda! Tempo de execução: {elapsed_time}')
 
+        # caso ocorra algum erro, exibe o erro
         except PermissionError as e:
             print(f'O arquivo {self.news_orders} está aberto. Feche o arquivo e tente novamente')
             return
         
+        # caso ocorra algum erro, exibe o erro
         except Exception as e:
             print(f'Ocorreu um erro no arquivo {self.news_orders}: {e}')
             return False
 
     # Criar pastas no diretório H:\\
     def make_folders_clients(self, batch_totvs_path, extractor_path, sheet_name, col):
+        # carrega o arquivo com os clientes
         df = pd.read_excel(extractor_path, sheet_name, engine='openpyxl')
+        # cria a coluna com o caminho completo do diretório
         basedir = batch_totvs_path
         
+        # itera sobre cada cliente
         for client in df[col]:
+            # cria o caminho completo do diretório
             client_path = os.path.join(basedir, client)
             
+            # verifica se o diretório já existe
             if not os.path.exists(client_path):
+                # se não existir, cria o diretório
                 os.makedirs(client_path)
                 print(f'Pasta {client} criada com sucesso!')
             else:
@@ -429,16 +528,17 @@ class FileProcessor:
                     print(f"Arquivo {file_name} excluído com sucesso!")
                 else:
                     print(f"Arquivo {file_name} não encontrado ou permissão negada.")
-            print(Fore.WHITE + "EXCLUSÃO DE ARQUIVOS FINALIZADA..." + Fore.RESET)
+            
             logging.info(f"ROTINA 2 - EXCLUSÃO DE ARQUIVOS FINALIZADA...")
             return True
+        
         except PermissionError as e:
             print(f"O arquivo {self.folder} está aberto: {e}")
-            logging.error(f"Erro de permissão para abrir o arquivo {self.folder}. Arquivo aberto : {e}")
+            print('Delete o arquivo manualmente.')
             return False
+        
         except Exception as e:
             print(f"Ocorreu um erro ao excluir os arquivos: {e}")
-            logging.error(f"Ocorreu um erro ao excluir os arquivos: {e}")
             return False 
             
     # função para distribuir os arquivos por cliente
@@ -447,25 +547,34 @@ class FileProcessor:
         # diretório de origem dos arquivos (NOVOS_PEDIDOS)
         path = source_directory
         
-        for filename in os.listdir(path):
-            # caminho completo do arquivo de origem que será movido
-            full_source = os.path.join(path, filename)
+        try:
+            for filename in os.listdir(path):
+                # caminho completo do arquivo de origem que será movido
+                full_source = os.path.join(path, filename)
 
-            # extrai o nome do cliente do arquivo
-            client_name = filename.split('_')[1].split('.')[0]
+                # extrai o nome do cliente do arquivo
+                client_name = filename.split('_')[1].split('.')[0]
 
-            # diretório de destino do arquivo
-            target_path =  os.path.join(target_directory, client_name)
-            os.makedirs(target_path, exist_ok=True)
+                # diretório de destino do arquivo
+                target_path =  os.path.join(target_directory, client_name)
+                os.makedirs(target_path, exist_ok=True)
 
-            target_path_file = os.path.join(target_path, filename)
+                # caminho completo do arquivo de destino
+                target_path_file = os.path.join(target_path, filename)
 
-            if not os.path.exists(target_path_file):
-                # move o arquivo para o diretório de destino
+                # Se o arquivo já existe, remova-o antes de mover o novo
+                if os.path.exists(target_path_file):
+                    os.remove(target_path_file)
+                    print(f'Removendo arquivo existente: {target_path_file}')
+
+                # Move o arquivo para o diretório de destino
                 shutil.move(full_source, target_path)
                 print(f'Movendo arquivo {filename} para {target_path}...')
-            else:
-                print(Fore.GREEN + f'Arquivo {filename} já existe no diretório {target_path}! Igornando arquivo...' + Fore.RESET)
+                
+        except PermissionError as e:
+            print(f"O arquivo {self.folder} está aberto: {e}")
+            print(f'Mova o arquivo manualmente para o diretório {target_path}')
+            return False
 
 
     
