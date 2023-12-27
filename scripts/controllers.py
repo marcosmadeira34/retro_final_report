@@ -76,7 +76,7 @@ class FinalReport:
                         if pd.api.types.is_datetime64_any_dtype(df[col]):
                             df[col] = df[col].dt.strftime('%d/%m/%Y')                
                         # Retorna o DataFrame modificado
-                        print(f'Formatando coluna {col}...')
+                        print(f'Renomeando coluna dataframes ...')
                         return df
                     
                 # caso ocorra algum erro, exibe o erro    
@@ -112,9 +112,9 @@ class FinalReport:
             'aniversario': 'ANIVERSARIO',
             'desc_ajuste': 'DESC AJUSTE',
             'indice_aplicado': 'INDICE APLICADO',
-            'dias_de_locacao': 'DIAS DE LOCACAO',
+            'dias_de_locacao': 'DIAS DE LOCAÇÃO',
             'valor_de_origem': 'VALOR DE ORIGEM',
-            'valor_unitario': 'VALOR UNITARIO',
+            'valor_unitario': 'VALOR UNITÁRIO',
             'valor_bruto': 'VALOR BRUTO',
             'tipo_do_mes': 'TIPO DO MES',
             'nr_chamado': 'NR CHAMADO',
@@ -124,7 +124,7 @@ class FinalReport:
             'id_equipamento': 'ID EQUIPAMENTO',
             'id_equip_substituido': 'ID EQUIP SUBSTITUIDO',
             'data_da_substituicao': 'DATA DA SUBSTITUICAO',
-            'data_proximo_faturamento': 'DATA PROXIMO FATURAMENTO',
+            'data_proximo_faturamento': 'DATA PRÓXIMO FATURAMENTO',
             'data_inicio': 'DATA INICIO',
             'data_fim_locacao': 'DATA FIM LOCACAO',
             'tipo_de_servico': 'TIPO DE SERVICO',
@@ -137,9 +137,9 @@ class FinalReport:
             'serie_de_faturamento': 'SERIE DE FATURAMENTO',
             'data_de_faturamento': 'DATA DE FATURAMENTO',
             'qtde_faturamento': 'QTDE FATURAMENTO',
-            'vlr_unitario_faturamento': 'VLR UNITARIO FATURAMENTO',
+            'vlr_unitario_faturamento': 'VLR UNITÁRIO FATURAMENTO',
             'vlr_total_faturamento': 'VLR TOTAL FATURAMENTO',
-            'periodo_de_faturamento': 'PERIODO DE FATURAMENTO'
+            'periodo_de_faturamento': 'PERÍODO DE FATURAMENTO'
             }
 
         for filename in os.listdir(directory):
@@ -261,7 +261,7 @@ class FinalReport:
         print(f'Pedidos salvos no diretório NOVOS_PEDIDOS')
         print('Verificação e atualização concluídas.\n')
         end = time.time()
-        print(f'Tempo de execução do código: {end - start}')
+        #print(f'Tempo de execução do código: {end - start}')
     
     
     """ Função que cria um arquivo único do cliente com todos os pedidos"""
@@ -300,49 +300,49 @@ class FinalReport:
             'equipamento': 'EQUIPAMENTO',
             'nota_de_remessa': 'NOTA DE REMESSA',
             'data_de_remessa': 'DATA DE REMESSA',
-            'serie_da_nf_remessa': 'SERIE DA NF REMESSA',
+            'serie_da_nf_remessa': 'SÉRIE DA NF REMESSA',
             'produto': 'PRODUTO',
-            'descricao_do_produto': 'DESCRICAO DO PRODUTO',
+            'descricao_do_produto': 'DESCRIÇÃO DO PRODUTO',
             'quantidade': 'QUANTIDADE',
             'pedido_de_remessa': 'PEDIDO DE REMESSA',
             'projeto': 'PROJETO',
             'obra': 'OBRA',
             'prazo_do_contrato': 'PRAZO DO CONTRATO',
-            'data_de_ativacao': 'DATA DE ATIVACAO',
-            'periodo_inicial': 'PERIODO INICIAL',
-            'periodo_final': 'PERIODO FINAL',
+            'data_de_ativacao': 'DATA DE ATIVAÇÃO',
+            'periodo_inicial': 'PERÍODO INICIAL',
+            'periodo_final': 'PERÍODO FINAL',
             'data_do_termo': 'DATA DO TERMO',
-            'aniversario': 'ANIVERSARIO',
+            'aniversario': 'ANIVERSÁRIO',
             'desc_ajuste': 'DESC AJUSTE',
-            'indice_aplicado': 'INDICE APLICADO',
-            'dias_de_locacao': 'DIAS DE LOCACAO',
+            'indice_aplicado': 'ÍNDICE APLICADO',
+            'dias_de_locacao': 'DIAS DE LOCAÇÃO',
             'valor_de_origem': 'VALOR DE ORIGEM',
-            'valor_unitario': 'VALOR UNITARIO',
+            'valor_unitario': 'VALOR UNITÁRIO',
             'valor_bruto': 'VALOR BRUTO',
-            'tipo_do_mes': 'TIPO DO MES',
+            'tipo_do_mes': 'TIPO DO MÊS',
             'nr_chamado': 'NR CHAMADO',
             'contrato_legado': 'CONTRATO LEGADO',
-            'acrescimo': 'ACRESCIMO',
+            'acrescimo': 'ACRÉSCIMO',
             'franquia': 'FRANQUIA',
             'id_equipamento': 'ID EQUIPAMENTO',
             'id_equip_substituido': 'ID EQUIP SUBSTITUIDO',
-            'data_da_substituicao': 'DATA DA SUBSTITUICAO',
-            'data_proximo_faturamento': 'DATA PROXIMO FATURAMENTO',
-            'data_inicio': 'DATA INICIO',
-            'data_fim_locacao': 'DATA FIM LOCACAO',
-            'tipo_de_servico': 'TIPO DE SERVICO',
+            'data_da_substituicao': 'DATA DA SUBSTITUIÇÃO',
+            'data_proximo_faturamento': 'DATA PRÓXIMO FATURAMENTO',
+            'data_inicio': 'DATA INÍCIO',
+            'data_fim_locacao': 'DATA FIM LOCAÇÃO',
+            'tipo_de_servico': 'TIPO DE SERVIÇO',
             'email': 'E-MAIL',
-            'descricao_do_ajuste': 'DESCRICAO DO AJUSTE',
+            'descricao_do_ajuste': 'DESCRICÃO DO AJUSTE',
             'nome_da_obra': 'NOME DA OBRA',
             'numero_da_as': 'NUMERO DA AS',
             'pedido_faturamento': 'PEDIDO FATURAMENTO',
             'nf_de_faturamento': 'NF DE FATURAMENTO',
-            'serie_de_faturamento': 'SERIE DE FATURAMENTO',
+            'serie_de_faturamento': 'SÉRIE DE FATURAMENTO',
             'data_de_faturamento': 'DATA DE FATURAMENTO',
             'qtde_faturamento': 'QTDE FATURAMENTO',
-            'vlr_unitario_faturamento': 'VLR UNITARIO FATURAMENTO',
+            'vlr_unitario_faturamento': 'VLR UNITÁRIO FATURAMENTO',
             'vlr_total_faturamento': 'VLR TOTAL FATURAMENTO',
-            'periodo_de_faturamento': 'PERIODO DE FATURAMENTO'
+            'periodo_de_faturamento': 'PERÍODO DE FATURAMENTO'
             }
         
         try:
@@ -354,10 +354,46 @@ class FinalReport:
                     # Lê o arquivo
                     df = pd.read_excel(file_path, sheet_name='CONSOLIDADO', engine='openpyxl')
                     # formata as células                
-                    df = self.format_cells(directory)              
+                    df = self.format_cells(directory)                   
+                     
                     
                     # renomeia as colunas
                     df = df.rename(columns=new_names)
+
+                    # reordena as colunas
+                    df = df[['CÓDIGO CLIENTE', 'NOME DO CLIENTE', 'LOJA CLIENTE', 'CNPJ DO CLIENTE', 'CNPJ DE FATURAMENTO',
+                            'PROJETO', 'OBRA', 'EQUIPAMENTO', 'DESCRIÇÃO DO PRODUTO', 'DATA DE ATIVAÇÃO', 'PERÍODO INICIAL',
+                            'PERÍODO FINAL', 'PERÍODO DE FATURAMENTO', 'DIAS DE LOCAÇÃO', 'VALOR UNITÁRIO', 'VALOR BRUTO',
+                            'VLR UNITÁRIO FATURAMENTO', 'QUANTIDADE', 'VLR TOTAL FATURAMENTO', 'ANIVERSÁRIO', 'DESC AJUSTE',
+                            'ÍNDICE APLICADO', 'ACRÉSCIMO', 'FRANQUIA', 'DATA PRÓXIMO FATURAMENTO', 'CONTRATO LEGADO', 
+
+
+                            'CNPJ DE REMESSA', 'NOTA DE REMESSA', 'DATA DE REMESSA', 'SÉRIE DA NF REMESSA', 'PRODUTO',
+                            'PEDIDO DE REMESSA', 'PRAZO DO CONTRATO', 'DATA DO TERMO', 'VALOR DE ORIGEM', 'TIPO DO MÊS',
+                            'NR CHAMADO', 'ID EQUIPAMENTO', 'ID EQUIP SUBSTITUIDO', 'DATA DA SUBSTITUIÇÃO', 'DATA INÍCIO',
+                            'DATA FIM LOCAÇÃO', 'TIPO DE SERVIÇO', 'E-MAIL', 'DESCRICÃO DO AJUSTE', 'NOME DA OBRA',
+                            'NUMERO DA AS', 'PEDIDO FATURAMENTO', 'NF DE FATURAMENTO', 'SÉRIE DE FATURAMENTO',
+                            'DATA DE FATURAMENTO', 'QTDE FATURAMENTO'          
+                            
+                            
+                            ]]
+
+                    # dropas as colunas que não serão usadas
+                    df = df[[
+                            'CNPJ DE REMESSA', 'NOTA DE REMESSA', 'DATA DE REMESSA', 'SÉRIE DA NF REMESSA', 'PRODUTO',
+                            'PEDIDO DE REMESSA', 'PRAZO DO CONTRATO', 'DATA DO TERMO', 'VALOR DE ORIGEM', 'TIPO DO MÊS',
+                            'NR CHAMADO', 'ID EQUIPAMENTO', 'ID EQUIP SUBSTITUIDO', 'DATA DA SUBSTITUIÇÃO', 'DATA INÍCIO',
+                            'DATA FIM LOCAÇÃO', 'TIPO DE SERVIÇO', 'E-MAIL', 'DESCRICÃO DO AJUSTE', 'NOME DA OBRA',
+                            'NUMERO DA AS', 'PEDIDO FATURAMENTO', 'NF DE FATURAMENTO', 'SÉRIE DE FATURAMENTO',
+                            'DATA DE FATURAMENTO', 'QTDE FATURAMENTO'
+                    ]] 
+
+                      
+
+                    
+
+
+
                     # salva o arquivo em excel
                     df.to_excel(file_path, sheet_name='CONSOLIDADO', index=False, engine='openpyxl')
         except PermissionError as e:

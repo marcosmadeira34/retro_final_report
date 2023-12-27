@@ -16,7 +16,7 @@ invoiced_orders = r'C:\DataWare\data\consolidated_files\consolidated_validated\P
 news_orders = r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS' # NOVOS PEDIDOS IDENTIFICADOS NO EXTRATOR
 output_merge_path = r'C:\DataWare\data\consolidated_files\consolidated_validated\MERGE_RELATÓRIO_FINAL' # RELATÓRIO FINAL 
 source_directory = r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS' # DIRETÓRIO DE ORIGEM DOS PEDIDOS
-target_directory = r'C:\DataWare\data\consolidated_files\consolidated_validated\PEDIDOS_MOVIDOS' # DIRETÓRIO DE DESTINO DOS PEDIDOS
+target_directory = r'H:\01 - FATURAMENTO\RELATORIO-TOTVS_2024' # DIRETÓRIO DE DESTINO DOS PEDIDOS
 
 
 file_processor = FileProcessor(extractor_file_path, invoiced_orders, news_orders, output_merge_path)
@@ -24,6 +24,7 @@ host_postgres = 'postgresql://postgres:123456789@localhost:5432/postgres'
 sql = ConnectPostgresQL(host_postgres)
 final_report = FinalReport(host_postgres)
 #sql.create_database()
+
 
 
 if __name__ == "__main__":
@@ -57,17 +58,17 @@ if __name__ == "__main__":
                 final_report.check_and_update_orders(extractor_file_path, 'pedido_faturamento')
                 sleep(0.5)
                 print(Fore.GREEN + 'PEDIDOS CHECADOS COM SUCESSO!' + Fore.RESET)
-                print(Fore.GREEN + 'RENOMEANDO E FORMATANDO COLUNAS' + Fore.RESET)
+                #print(Fore.GREEN + 'RENOMEANDO E FORMATANDO COLUNAS' + Fore.RESET)
                 final_report.rename_format_columns(news_orders)
                 #final_report.rename_columns(r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS')
-                print(Fore.GREEN + 'COLUNAS RENOMEADAS E FORMATADAS COM SUCESSO!' + Fore.RESET)
+                #print(Fore.GREEN + 'COLUNAS RENOMEADAS E FORMATADAS COM SUCESSO!' + Fore.RESET)
                 sleep(0.5)
-                print(Fore.GREEN + 'MOVENDO PEDIDOS PARA DIRETÓRIO H:\ ...' + Fore.RESET)
-                file_processor.move_file_to_client_folder(source_directory=source_directory, target_directory=target_directory)
-                print(Fore.GREEN + 'PEDIDOS MOVIDOS COM SUCESSO PARA RESPECTIVAS PASTA!' + Fore.RESET)
+                #print(Fore.GREEN + 'MOVENDO PEDIDOS PARA DIRETÓRIO H:\01 - FATURAMENTO\RELATORIO-TOTVS_2024' + Fore.RESET)
+                #file_processor.move_file_to_client_folder(source_directory=source_directory, target_directory=target_directory)
+                #print(Fore.GREEN + 'PEDIDOS MOVIDOS COM SUCESSO PARA H:\01 - FATURAMENTO\RELATORIO-TOTVS_2024' + Fore.RESET)
                 sleep(0.5)
-                file_processor.delete_new_files(files_path=news_orders)
-                print(Fore.LIGHTYELLOW_EX + 'AUTOMAÇÃO CONCLUÍDA!' + Fore.RESET)
+                #file_processor.delete_new_files(files_path=news_orders)
+                #print(Fore.LIGHTYELLOW_EX + 'AUTOMAÇÃO CONCLUÍDA!' + Fore.RESET)
             
             elif option == 2:
                 file_processor.list_all_files(news_orders)
