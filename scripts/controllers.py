@@ -352,56 +352,108 @@ class FinalReport:
                     # caminho completo do arquivo
                     file_path = os.path.join(directory, filename)
                     # Lê o arquivo
-                    df = pd.read_excel(file_path, sheet_name='CONSOLIDADO', engine='openpyxl')
-                    # formata as células                
-                    df = self.format_cells(directory)                   
+                    df = pd.read_excel(file_path, sheet_name='CONSOLIDADO', engine='openpyxl')                                
                      
                     
                     # renomeia as colunas
                     df = df.rename(columns=new_names)
+
+                    
+                    # dropas as colunas que não serão usadas
+                    df = df.drop(['CNPJ DE REMESSA', 'NOTA DE REMESSA', 'DATA DE REMESSA', 'SÉRIE DA NF REMESSA', 'PRODUTO',
+                            'PEDIDO DE REMESSA', 'PRAZO DO CONTRATO', 'DATA DO TERMO', 'VALOR DE ORIGEM', 'TIPO DO MÊS',
+                            'NR CHAMADO', 'ID EQUIPAMENTO', 'ID EQUIP SUBSTITUIDO', 'DATA DA SUBSTITUIÇÃO', 'DATA INÍCIO',
+                            'DATA FIM LOCAÇÃO', 'TIPO DE SERVIÇO', 'E-MAIL', 'DESCRICÃO DO AJUSTE', 'NOME DA OBRA',
+                            'NUMERO DA AS', 'PEDIDO FATURAMENTO', 'NF DE FATURAMENTO', 'SÉRIE DE FATURAMENTO',
+                            'DATA DE FATURAMENTO', 'QTDE FATURAMENTO' ], axis=1, errors='ignore')
+
+                    print(f'Colunas removidas com sucesso')
 
                     # reordena as colunas
                     df = df[['CÓDIGO CLIENTE', 'NOME DO CLIENTE', 'LOJA CLIENTE', 'CNPJ DO CLIENTE', 'CNPJ DE FATURAMENTO',
                             'PROJETO', 'OBRA', 'EQUIPAMENTO', 'DESCRIÇÃO DO PRODUTO', 'DATA DE ATIVAÇÃO', 'PERÍODO INICIAL',
                             'PERÍODO FINAL', 'PERÍODO DE FATURAMENTO', 'DIAS DE LOCAÇÃO', 'VALOR UNITÁRIO', 'VALOR BRUTO',
                             'VLR UNITÁRIO FATURAMENTO', 'QUANTIDADE', 'VLR TOTAL FATURAMENTO', 'ANIVERSÁRIO', 'DESC AJUSTE',
-                            'ÍNDICE APLICADO', 'ACRÉSCIMO', 'FRANQUIA', 'DATA PRÓXIMO FATURAMENTO', 'CONTRATO LEGADO', 
-
-
-                            'CNPJ DE REMESSA', 'NOTA DE REMESSA', 'DATA DE REMESSA', 'SÉRIE DA NF REMESSA', 'PRODUTO',
-                            'PEDIDO DE REMESSA', 'PRAZO DO CONTRATO', 'DATA DO TERMO', 'VALOR DE ORIGEM', 'TIPO DO MÊS',
-                            'NR CHAMADO', 'ID EQUIPAMENTO', 'ID EQUIP SUBSTITUIDO', 'DATA DA SUBSTITUIÇÃO', 'DATA INÍCIO',
-                            'DATA FIM LOCAÇÃO', 'TIPO DE SERVIÇO', 'E-MAIL', 'DESCRICÃO DO AJUSTE', 'NOME DA OBRA',
-                            'NUMERO DA AS', 'PEDIDO FATURAMENTO', 'NF DE FATURAMENTO', 'SÉRIE DE FATURAMENTO',
-                            'DATA DE FATURAMENTO', 'QTDE FATURAMENTO'          
-                            
-                            
+                            'ÍNDICE APLICADO', 'ACRÉSCIMO', 'FRANQUIA', 'DATA PRÓXIMO FATURAMENTO', 'CONTRATO LEGADO',                            
+                                                        
                             ]]
-
-                    # dropas as colunas que não serão usadas
-                    df = df[[
-                            'CNPJ DE REMESSA', 'NOTA DE REMESSA', 'DATA DE REMESSA', 'SÉRIE DA NF REMESSA', 'PRODUTO',
-                            'PEDIDO DE REMESSA', 'PRAZO DO CONTRATO', 'DATA DO TERMO', 'VALOR DE ORIGEM', 'TIPO DO MÊS',
-                            'NR CHAMADO', 'ID EQUIPAMENTO', 'ID EQUIP SUBSTITUIDO', 'DATA DA SUBSTITUIÇÃO', 'DATA INÍCIO',
-                            'DATA FIM LOCAÇÃO', 'TIPO DE SERVIÇO', 'E-MAIL', 'DESCRICÃO DO AJUSTE', 'NOME DA OBRA',
-                            'NUMERO DA AS', 'PEDIDO FATURAMENTO', 'NF DE FATURAMENTO', 'SÉRIE DE FATURAMENTO',
-                            'DATA DE FATURAMENTO', 'QTDE FATURAMENTO'
-                    ]] 
-
-                      
-
+                     
+                    # formata células com datas para o formato dd/mm/aaaa
+                    cols_date = ['DATA DE ATIVAÇÃO', 'PERÍODO INICIAL', 'PERÍODO FINAL', 'PERÍODO DE FATURAMENTO',
+                            'DATA PRÓXIMO FATURAMENTO', 'ANIVERSÁRIO']
                     
-
-
-
+                    # itera sobre as colunas 
+                    for col in cols_date:
+                        # Verifica se a coluna é do tipo datetime antes de formatar
+                        if pd.api.types.is_datetime64_any_dtype(df[col]):
+                            df[col] = df[col].dt.strftime('%d/%m/%Y')
+                        else:
+                            try:
+                                # converte a coluna para datetime
+                                df[col] = pd.to_datetime(df[col].loc[df[col].notna()], format='%d/%m/%Y', errors='coerce')
+                            except Exception as e:
+                                print(f'Erro ao converter data: {e}')
+                    
+                    # formata células com cnpj para o formato xx.xxx.xxx/xxxx-xx
+                    cols_cnpj = ['CNPJ DO CLIENTE', 'CNPJ DE FATURAMENTO']
+                    # itera sobre as colunas
+                    for col in cols_cnpj:
+                        # Verifica se a coluna é do tipo string antes de aplicar .str
+                        if pd.api.types.is_string_dtype(df[col]):
+                            # defini o formato do cnpj xx.xxx.xxx/xxxx-xx
+                            df[col] = df[col].str.replace(r'(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})', r'\1.\2.\3/\4-\5')
+                        else:
+                            try:
+                                # converte a coluna para string
+                                df[col] = df[col].astype(str).str.replace(r'(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})', r'\1.\2.\3/\4-\5')
+                            except Exception as e:
+                                print(f'Erro ao converter cnpj: {e}')          
+                     
+                    
                     # salva o arquivo em excel
-                    df.to_excel(file_path, sheet_name='CONSOLIDADO', index=False, engine='openpyxl')
+                    with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
+                        df.to_excel(writer, sheet_name='CONSOLIDADO', index=False)
+
+                        # cria a sheet "SINTESE"
+                        sintese_df = df[['CONTRATO LEGADO', 'VALOR BRUTO']].copy()
+                        sintese_df = sintese_df.rename(columns={'CONTRATO LEGADO': 'CONTRATO/TERMO', 'VALOR BRUTO': 'VALOR A COBRAR'})
+                        
+                        # agrupa os valores por contrato
+                        
+
+                        sintese_df.to_excel(writer, sheet_name='SÍNTESE', index=False)
+
+                    print(f'Planilhas criadas com sucesso em {file_path}')
         except PermissionError as e:
             print(f"O arquivo {filename} está aberto: {e}")
             print('Feche o arquivo manualmente e tente novamente.')
             return False
                 
-                                
+
+    """ Função para formatar células do arquivo final com datas no formato dd/mm/aaaa"""
+    def format_date_cells(self, directory):
+        # define o diretório
+        directory = directory
+        # percorre o diretório e localiza os arquivos excel
+        for filename in os.listdir(directory):
+            if filename.endswith('.xlsx'):
+                # caminho completo do arquivo
+                file_path = os.path.join(directory, filename)
+                # Lê o arquivo
+                df = pd.read_excel(file_path, sheet_name='CONSOLIDADO', engine='openpyxl')
+                # lista com as colunas que serão formatadas
+                date_cols = ['DATA DE ATIVAÇÃO', 'PERÍODO INICIAL', 'PERÍODO FINAL', 'PERÍODO DE FATURAMENTO',
+                            'DATA PRÓXIMO FATURAMENTO']
+                try:
+                    # itera sobre as colunas e aplica a função formatar_cnpj
+                    for col in date_cols:
+                        df[col] = df[col].dt.strftime('%d/%m/%Y')
+                except Exception as e:
+                    print(f"Erro ao formatar colunas: {e}")
+                    return None
+                
+
+
 
 # Classe para processar e listar arquivos do diretório
 class FileProcessor:

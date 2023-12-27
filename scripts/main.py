@@ -60,15 +60,13 @@ if __name__ == "__main__":
                 print(Fore.GREEN + 'PEDIDOS CHECADOS COM SUCESSO!' + Fore.RESET)
                 #print(Fore.GREEN + 'RENOMEANDO E FORMATANDO COLUNAS' + Fore.RESET)
                 final_report.rename_format_columns(news_orders)
-                #final_report.rename_columns(r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS')
-                #print(Fore.GREEN + 'COLUNAS RENOMEADAS E FORMATADAS COM SUCESSO!' + Fore.RESET)
                 sleep(0.5)
                 #print(Fore.GREEN + 'MOVENDO PEDIDOS PARA DIRETÓRIO H:\01 - FATURAMENTO\RELATORIO-TOTVS_2024' + Fore.RESET)
-                #file_processor.move_file_to_client_folder(source_directory=source_directory, target_directory=target_directory)
+                file_processor.move_file_to_client_folder(source_directory=source_directory, target_directory=target_directory)
                 #print(Fore.GREEN + 'PEDIDOS MOVIDOS COM SUCESSO PARA H:\01 - FATURAMENTO\RELATORIO-TOTVS_2024' + Fore.RESET)
                 sleep(0.5)
                 #file_processor.delete_new_files(files_path=news_orders)
-                #print(Fore.LIGHTYELLOW_EX + 'AUTOMAÇÃO CONCLUÍDA!' + Fore.RESET)
+                print(Fore.LIGHTYELLOW_EX + 'AUTOMAÇÃO CONCLUÍDA!' + Fore.RESET)
             
             elif option == 2:
                 file_processor.list_all_files(news_orders)
