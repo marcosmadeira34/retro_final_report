@@ -12,6 +12,7 @@ Base = declarative_base()
 class OrdersTable(Base):
     # nome da tabela no banco de dados
     __tablename__ = 'pedidosfaturados'
+    
     # evita que dados duplicados sejam inseridos no banco de dados
     __table_args__ = (UniqueConstraint('pedido_faturamento', 'equipamento'),)
 
@@ -23,7 +24,7 @@ class OrdersTable(Base):
     cnpj_do_cliente = Column(String)
     cnpj_de_faturamento = Column(String)
     cnpj_de_remessa = Column(String)
-    equipamento = Column(String)
+    equipamento = Column(String, nullable=True)
     nota_de_remessa = Column(String)
     data_de_remessa = Column(Date)
     serie_da_nf_remessa = Column(String)
@@ -34,9 +35,10 @@ class OrdersTable(Base):
     projeto = Column(String)
     obra = Column(String)
     prazo_do_contrato = Column(String)
+    data_de_ativacao_legado = Column(Date)
     data_de_ativacao = Column(Date)
-    periodo_inicial = Column(Date)
-    periodo_final = Column(Date)
+    ultimo_faturamento = Column(Date)
+    #periodo_final = Column(Date)
     data_do_termo = Column(Date)
     aniversario = Column(Date)
     desc_ajuste = Column(String)
@@ -46,7 +48,7 @@ class OrdersTable(Base):
     valor_unitario = Column(String)
     valor_bruto = Column(String)
     tipo_do_mes = Column(String)
-    nr_chamado = Column(String)
+    #nr_chamado = Column(String)
     contrato_legado = Column(String)
     acrescimo = Column(String)
     franquia = Column(String)
@@ -54,11 +56,11 @@ class OrdersTable(Base):
     id_equip_substituido = Column(String)
     data_da_substituicao = Column(Date)
     data_proximo_faturamento = Column(Date)
-    data_inicio = Column(Date)
+    #data_inicio = Column(Date)
     data_fim_locacao = Column(Date)
     tipo_de_servico = Column(String)
     email = Column(String)
-    descricao_do_ajuste = Column(String)
+    calculo_reajuste = Column(String)
     nome_da_obra = Column(String)
     numero_da_as = Column(String)
     pedido_faturamento = Column(String)
@@ -69,7 +71,7 @@ class OrdersTable(Base):
     vlr_unitario_faturamento = Column(String)
     vlr_total_faturamento = Column(String)
     periodo_de_faturamento = Column(String)
-
+    status_de_cobranca = Column(String)
 
 # classe para definir o nome da tabela no banco de dados    
 class OrdersClass:
@@ -200,7 +202,23 @@ class ConnectPostgresQL:
                 session.close()
 
     
-
+    # função para criar novo usuário
+    def create_user(self, username, password):
+        try:
+            with self.engine.connect() as conn:
+                conn.execute(f"CREATE USER {username} WITH PASSWORD '{password}'")
+                print(Fore.GREEN + f'Usuário {username} criado com sucesso!' + Fore.RESET)
+        except Exception as e:
+            raise e 
+        
+    # função para conceder privilégios ao usuário
+    def grant_privileges(self, username, database):
+        try:
+            with self.engine.connect() as conn:
+                conn.execute(f"GRANT ALL PRIVILEGES ON DATABASE {database} TO {username}")
+                print(Fore.GREEN + f'Privilégios concedidos ao usuário {username} com sucesso!' + Fore.RESET)
+        except Exception as e:
+            raise e
 
 
 
