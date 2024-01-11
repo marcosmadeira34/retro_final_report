@@ -1,12 +1,42 @@
 
-O objetivo do projeto é automatizar a criação do relatório final de faturamento a ser enviado mensalmente ao cliente. O departamento de faturamento enfrentará desafios na elaboração do relatório padrão quando o ambiente Totvs estiver em produção. Atualmente, o relatório emitido pelo Totvs não contém todas as informações essenciais para o cliente. 
+Objetivo do Projeto
 
-A automação resolverá esse problema ao identificar novos dados de pedidos gerados no ambiente Totvs, seja manualmente pelo analista ou automaticamente pelo próprio ERP. Utilizando um conjunto de funções Python organizadas em uma pipeline, a automação processará esses dados e gerará um relatório no formato padrão. Esse relatório permitirá que o cliente valide as informações e efetue o faturamento de maneira mais eficiente. 
+O objetivo do projeto é automatizar a criação do relatório final de faturamento a ser enviado mensalmente ao cliente. O departamento de faturamento enfrentará desafios na elaboração do relatório padrão quando o ambiente Totvs estiver em produção. Atualmente, o relatório emitido pelo Totvs não contém todas as informações essenciais para o cliente.
+
+A automação resolverá esse problema ao identificar novos dados de pedidos gerados no ambiente Totvs, seja manualmente pelo analista ou automaticamente pelo próprio ERP. Utilizando um conjunto de funções Python organizadas em uma pipeline, a automação processará esses dados e gerará um relatório no formato padrão. Esse relatório permitirá que o cliente valide as informações e efetue o faturamento de maneira mais eficiente.
+
+BENEFÍCIOS
 
 Os benefícios da automação no projeto incluem um significativo ganho de eficiência operacional para o departamento de faturamento. Ao eliminar a necessidade de intervenção manual na criação do relatório, a automação reduzirá substancialmente o tempo necessário para gerar e enviar o documento ao cliente mensalmente. Além disso, a mitigação de erros operacionais humanos é um benefício crucial, uma vez que a automação seguirá um processo consistente e livre de falhas.
+
+PIPELINE DOS DADOS
 
 No que diz respeito às etapas específicas da pipeline, a identificação de novos pedidos é a fase inicial crucial. Essa detecção pode ser realizada tanto pelo analista manualmente quanto de forma automática pelo ERP. Uma vez identificados, esses novos pedidos são integrados às demais informações necessárias do cliente. Isso pode envolver a busca e agregação de dados relevantes de diversas fontes, garantindo que o relatório final seja abrangente e preciso.
 
 Ao mesclar esses dados, a automação assegura que todas as informações essenciais estejam incluídas no relatório final de faturamento. Isso não apenas economiza tempo, mas também reduz a probabilidade de omissões ou erros relacionados à coleta manual de dados.
 
-Para aprimorar ainda mais o raciocínio, seria útil considerar a implementação de medidas de segurança e controle de qualidade ao longo do processo automatizado. Isso garantiria a integridade dos dados e a confiabilidade do relatório gerado, fortalecendo a confiança do cliente no sistema automatizado
+
+
+FLUXOGRAMA DO PROJETO 
+
+ 
+
+Fluxograma Relatório Final.png
+ 
+
+ 
+
+PRÓXIMAS MELHORIAS
+
+Para aprimorar ainda mais, seria útil considerar a implementação de ferramentas de orquestração, como exemplo o APACHE AIRFLOW. Assim, todo agendamento, execução de tarefas via essa plataforma, o que traria facilidades de monitoramento e notificações de alerta no pipeline de dados complexos como essa automação.
+
+ 
+
+Link do repositório: https://bitbucket.org/arklok/final_billing_report/src/main/
+Departamento: Faturamento
+
+Participantes do projeto:
+
+Marcos Vinicius Madeira - Desenvolvedor Python
+
+Eliane Celeste Vilela - Especialista de Faturamento
