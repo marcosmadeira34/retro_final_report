@@ -53,7 +53,7 @@ if __name__ == "__main__":
         #file_processor.delete_xlsx(files_path=extractor_file_path)
         print(Fore.GREEN + 'AUTOMAÇÃO CONCLUÍDA!' + Fore.RESET)
         # printa o horario da ultima execução
-        print(Fore.GREEN + 'ÚLTIMA EXECUÇÃO: ' + Fore.RESET + str(datetime.now()))
+        print(Fore.GREEN + 'ÚLTIMA EXECUÇÃO : ' + Fore.RESET + str(datetime.now()))
 
         # Agendar a execução da função delete_xlsx para cada 10 minutos
         # Agendar a execução da função delete_xlsx para cada 10 minutos
