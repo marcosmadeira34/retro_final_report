@@ -187,6 +187,12 @@ if __name__ == "__main__":
                                                 sheet_name='2-Resultado', engine='openpyxl',
                                                 directory=r'\\10.10.4.7\Dados\Financeiro\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\PASTAS_AJUSTADAS')
             
+            elif option == 12:
+                file_processor.move_files_to_month_subfolder(directory_origin=r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS',
+                                                             target_directory=r'H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\PASTAS_AJUSTADAS_2'
+
+                )
+            
             else:
                 print('Opção inválida')
         except Exception as e:

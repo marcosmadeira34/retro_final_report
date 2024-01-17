@@ -301,9 +301,7 @@ class FinalReport:
             print(f"Erro ao processar arquivo: {e}")
             return False
 
-            
-            
-        
+           
     """ Função que cria um arquivo único do cliente com todos os pedidos"""
     def merge_same_client(self, news_orders, output_path):
         # Inicia o contador de tempo de execução do método
@@ -914,46 +912,28 @@ class FileProcessor:
         for file_to_move in files_to_move:
             # estabelece caminho completo do arquivo na origem
             current_file_path = os.path.join(directory_origin, file_to_move)
-            print(f'Caminho completo do arquivo na origem: {current_file_path}')
-            
+                        
             # extrai o nome do cliente do nome do arquivo
-            client_name = file_to_move.split('_')[1].split('.')[0]
-            print(f'Nome do cliente: {client_name}')            
-            
+            client_name_start = file_to_move.find('_') + 1
+            client_name_end = file_to_move.find('.', client_name_start)
+            client_name = file_to_move[client_name_start:client_name_end]
+            print(f'Nome do cliente: {client_name}')               
 
             # estabelece caminho completo do arquivo na destino
             current_file_path_with_month = os.path.join(target_directory, client_name, month_year)
-            print(f'Caminho completo do arquivo na origem: {current_file_path_with_month}')
-
+            
             # cria o diretório para o arquivo ser movido
             if not os.path.exists(current_file_path_with_month):
                 # se não existir, cria o diretório
                 os.makedirs(current_file_path_with_month)
-                print(f'Pasta {current_file_path_with_month} criada com sucesso!')
+                print(f'Pasta {current_file_path_with_month} criada com sucesso!')    
                 # move o arquivo para o diretório correspondente ao nome do cliente
             shutil.move(current_file_path, current_file_path_with_month)
             print(f'Arquivo {file_to_move} movido para {current_file_path_with_month}')
+                      
+
 
             
-            
-
-
-            # verifica se o diretório já existe       
-
-            """ # move os arquivos para a subpasta do mês e ano
-            if os.path.exists(month_folder_path):
-                new_file_path = os.path.join(month_folder_path, file_to_move)
-                
-                shutil.move(current_file_path, new_file_path)
-                print(f'Arquivo {file_to_move} movido para {month_folder_path}')
-            else:
-                # se não existir, cria o diretório com o mês e ano
-                os.makedirs(month_folder_path)
-                print(f'Pasta {month_folder_path} criada com sucesso!')
-                new_file_path = os.path.join(month_folder_path, file_to_move)
-                shutil.move(current_file_path, new_file_path)
-                print(f'Arquivo {file_to_move} movido para {month_folder_path}') """
-
 
 
 
