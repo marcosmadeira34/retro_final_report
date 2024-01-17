@@ -183,7 +183,7 @@ class FinalReport:
         start = time.time()
         """Método para verificar e atualizar pedidos ausentes no banco de dados"""
 
-        print('Verificando novos pedidos e atualizando o banco de dados...\n')
+        #print(Fore.LIGHTYELLOW_EX + 'Verificando novos pedidos e atualizando o banco de dados...\n' + Fore.RESET)
 
         try:
             for filename in os.listdir(extractor_file_path):
@@ -207,7 +207,7 @@ class FinalReport:
 
                     # Converte a coluna PEDIDO para numérico
                     extract_df[col_lower] = pd.to_numeric(extract_df[col_lower], errors='coerce')
-                    print(f'Total de registros no extrator: {len(extract_df)} | Arquivo {filename}\n')
+                    print(f'Total de registros no extrator: {len(extract_df)} | Arquivo {filename}')
 
                     # Filtra o DataFrame para incluir apenas os pedidos mais recentes
                     extract_df = extract_df[extract_df[col_lower] >= 0]
@@ -218,7 +218,7 @@ class FinalReport:
 
                     # Identifica os pedidos ausentes
                     new_orders = set(extract_df[col_lower]) - existing_orders
-                    print(f'Total de novos pedidos no extrator: {len(new_orders)} | Arquivo {filename}\n')
+                    print(f'Total de novos pedidos no extrator: {len(new_orders)} | Arquivo {filename}')
 
                     if len(new_orders) > 0:
                         # Reinicializa a variável new_orders_df
@@ -259,10 +259,12 @@ class FinalReport:
                             # pula o processamento dos clientes abaixo (grandes clientes)
                             special_clients = ['teste']
 
-                            def save_order_excel(order):
+                            def save_order_excel(order, project):
                                 order_df = extract_df[extract_df[col_lower] == order]
+                                
                                 if not order_df.empty:
                                     client_name = order_df['CLIENTE'].iloc[0]
+                                    
                                     if client_name in special_clients:
                                         print(f'Relatório {client_name} será gerado manualmente')
                                         return
@@ -270,13 +272,18 @@ class FinalReport:
                                     client_name_safe = re.sub(r'[^a-zA-Z0-9_]', '_', unidecode.unidecode(client_name))
                                     sheet_names = ['LAVORO', 'CONSOLIDADO']
 
+                                    # itera sobre as sheets do arquivo
                                     for sheet in sheet_names:
-                                        order_df.to_excel(os.path.join(path, f'{order}_{client_name_safe}.xlsx'), sheet_name=sheet,
-                                                        index=False, engine='openpyxl')
-                                        print(f'Arquivo {order}_{client_name_safe}.xlsx sendo criado.')
+                                        # Define o nome do arquivo no padrão desejado, incluindo o número do projeto
+                                        file_name = f'{project}_{order}_{client_name_safe}.xlsx'
+                                        # Caminho completo do arquivo para salvar
+                                        file_path = os.path.join(path, file_name)
+                                        # Salva o arquivo em excel
+                                        order_df.to_excel(file_path, sheet_name=sheet, index=False, engine='openpyxl')
+                                        print(f'Arquivo {file_name} criado.')
 
                             with ThreadPoolExecutor() as executor:
-                                executor.map(save_order_excel, new_orders)
+                                executor.map(lambda order: save_order_excel(order, 'projeto'), new_orders)
 
                             print(f'Pedidos salvos no diretório NOVOS_PEDIDOS')
                             print('Verificação e atualização concluídas.\n')
@@ -294,7 +301,7 @@ class FinalReport:
             print(f"Erro ao processar arquivo: {e}")
             return False
 
-        print(f'Colunas não usadas no relatório final removidas com sucesso')       
+            
             
         
     """ Função que cria um arquivo único do cliente com todos os pedidos"""
@@ -556,8 +563,7 @@ class FinalReport:
                     return None
                 
 
-
-
+    
 # Classe para processar e listar arquivos do diretório
 class FileProcessor:
     # Definindo atributos da classe
@@ -688,6 +694,9 @@ class FileProcessor:
         for client in df[col]:
             # cria o caminho completo do diretório
             client_path = os.path.join(basedir, client)
+
+            # define o nome da pasta
+            
             
             # verifica se o diretório já existe
             if not os.path.exists(client_path):
@@ -733,7 +742,6 @@ class FileProcessor:
             return False 
         
     
-
     # função para excluir todos os arquivos da pasta copied_files
     def delete_xml(self, files_path):
         logging.info(f"EXCLUINDO ARQUIVOS XML...")
@@ -772,57 +780,65 @@ class FileProcessor:
     
     # função para previsão de pastas no diretório H:\\ usando inteligência artificial
     def find_closest_match(self, client_name, target_base_directory):
-        
-        #Lista de diretórios de destino disponíveis
-        target_diretories = [d for d in os.listdir(target_base_directory)]
-                             
-        
+        # Lista de diretórios de destino disponíveis
+        target_directories = [d for d in os.listdir(target_base_directory)]
+        print(f'Diretórios de destino: {target_directories}')
+
         # Encontra a correspondência mais próxima no diretório de destino usando fuzzywuzzy
-        best_match, _ = process.extractOne(client_name, target_diretories)
+        best_match, score = process.extractOne(client_name, target_directories)
 
-        # define um limite de confiança de 80%
-        threshold = 80
-
-        if best_match and best_match[1] >= threshold:
-            return os.path.join(target_base_directory, best_match[0])
+        # Define um limite de confiança de 80%
+        threshold = 50
+        if best_match and score >= threshold:
+            # Substituir caracteres inválidos ou limitar o tamanho do nome do diretório
+            valid_directory_name = ''.join(char for char in best_match if char.isalnum() or char in [' ', '_'])
+            return os.path.join(target_base_directory, valid_directory_name)
         else:
-            return None
-
+            # Se não houver correspondência próxima, crie um novo diretório
+            valid_client_name = ''.join(char for char in client_name if char.isalnum() or char in [' ', '_'])
+            new_directory = os.path.join(target_base_directory, valid_client_name)
+            os.makedirs(new_directory, exist_ok=True)
+            print(f'Diretório criado: {new_directory}')
+            return new_directory
 
 
     # função para distribuir os arquivos por cliente
     def move_file_to_client_folder(self, source_directory, target_directory):
-       
-        # diretório de origem dos arquivos (NOVOS_PEDIDOS)
         path = source_directory
-        
+
         try:
             for filename in os.listdir(path):
                 if filename.endswith('.xlsx') and not filename.startswith('~$'):
-                    # caminho completo do arquivo de origem que será movido
                     full_source = os.path.join(path, filename)
+                    print(f'Arquivo {filename} encontrado em {full_source}')
 
-                    # extrai o nome do cliente do arquivo
                     client_name = filename.split('_')[1].split('.')[0]
+                    print(f'Cliente: {client_name}')
 
-                    # Encontra a correspondência mais próxima no diretório de destino
-                    #target_directory = self.find_closest_match(client_name)
+                    target_directory = self.find_closest_match(client_name, target_directory)
+                    print(f'Diretório de destino: {target_directory}')
 
-                    # diretório de destino do arquivo
-                    target_path =  os.path.join(target_directory, client_name)
-                    os.makedirs(target_path, exist_ok=True)
+                    if target_directory:
+                        target_path = os.path.join(target_directory, client_name)
+                        os.makedirs(target_path, exist_ok=True)
 
-                    # caminho completo do arquivo de destino
-                    target_path_file = os.path.join(target_path, filename)
+                        target_path_file = os.path.join(target_path, filename)
 
-                    # Se o arquivo já existe, remova-o antes de mover o novo
-                    if os.path.exists(target_path_file):
-                        os.remove(target_path_file)
-                        print(f'Removendo arquivo existente: {target_path_file}')
+                        if os.path.exists(target_path_file):
+                            print(f'Substituindo arquivo existente: {target_path_file}')
+                            os.remove(target_path_file)
 
-                    # Move o arquivo para o diretório de destino
-                    shutil.move(full_source, target_path)
-                    print(f'Movendo arquivo {filename} para {target_path}...')
+                        shutil.move(full_source, target_path)
+                        print(f'Movendo arquivo {filename} para {target_path}...')
+                    else:
+                        print(f'Criando diretório para o cliente {client_name}')
+                        target_path = os.path.join(target_directory, client_name)
+                        os.makedirs(target_path, exist_ok=True)
+
+                        target_path_file = os.path.join(target_path, filename)
+
+                        shutil.move(full_source, target_path)
+                        print(f'Movendo arquivo {filename} para {target_path}...')
                 
         except PermissionError as e:
             print(f"O arquivo {source_directory} está aberto: {e}")
@@ -854,6 +870,91 @@ class FileProcessor:
         return total_billing_value
 
         
+    # função para criar pastas no diretório no novo formato
+    def make_new_folders(self, dataframe, sheet_name, engine, directory):
+        # lê o dataframe
+        df = pd.read_excel(dataframe, sheet_name=sheet_name, engine=engine)
+
+        for index, row in df.iterrows():
+            # seleciona a coluna 'Projeto' e 'Nome do Cliente'
+            project = row['Projeto']
+            client_name = row['Nome do Cliente']
+            # define o nome da pasta
+            folder_name = f'{client_name}'
+            # define o caminho completo da pasta
+            folder_path = os.path.join(directory, folder_name)
+            # define a data atual para criar pasta do mês
+            current_date = datetime.now()
+            # formata a data atual para o formato mm-aaaa
+            month_year = current_date.strftime('%m-%Y')
+            # adiciona a subpasta do mês e ano
+            folder_path_with_month_year = os.path.join(folder_path, month_year)
+
+            # verifica se o diretório já existe
+            if not os.path.exists(folder_path_with_month_year):
+                # se não existir, cria o diretório
+                os.makedirs(folder_path_with_month_year)
+                print(f'Pasta {folder_path_with_month_year} criada com sucesso!')
+            else:
+                print(f'Pasta {folder_path_with_month_year} já existe!')
+
+            # movimenta os arquivos para a subpasta do mês e ano
+            self.move_files_to_month_subfolder(project, directory, month_year)
+            
+
+    def move_files_to_month_subfolder(self, directory_origin, target_directory):
+        # obtém os arquivos xlsx no subdiretório principal
+        files_to_move = [file for file in os.listdir(directory_origin) if file.endswith('.xlsx') and not file.startswith('~$')]
+        
+        # cria a subpasta do mês e ano
+        current_date = datetime.now()
+        # formata a data atual para o formato mm-aaaa
+        month_year = current_date.strftime('%m-%Y')
+        
+        for file_to_move in files_to_move:
+            # estabelece caminho completo do arquivo na origem
+            current_file_path = os.path.join(directory_origin, file_to_move)
+            print(f'Caminho completo do arquivo na origem: {current_file_path}')
+            
+            # extrai o nome do cliente do nome do arquivo
+            client_name = file_to_move.split('_')[1].split('.')[0]
+            print(f'Nome do cliente: {client_name}')            
+            
+
+            # estabelece caminho completo do arquivo na destino
+            current_file_path_with_month = os.path.join(target_directory, client_name, month_year)
+            print(f'Caminho completo do arquivo na origem: {current_file_path_with_month}')
+
+            # cria o diretório para o arquivo ser movido
+            if not os.path.exists(current_file_path_with_month):
+                # se não existir, cria o diretório
+                os.makedirs(current_file_path_with_month)
+                print(f'Pasta {current_file_path_with_month} criada com sucesso!')
+                # move o arquivo para o diretório correspondente ao nome do cliente
+            shutil.move(current_file_path, current_file_path_with_month)
+            print(f'Arquivo {file_to_move} movido para {current_file_path_with_month}')
+
+            
+            
+
+
+            # verifica se o diretório já existe       
+
+            """ # move os arquivos para a subpasta do mês e ano
+            if os.path.exists(month_folder_path):
+                new_file_path = os.path.join(month_folder_path, file_to_move)
+                
+                shutil.move(current_file_path, new_file_path)
+                print(f'Arquivo {file_to_move} movido para {month_folder_path}')
+            else:
+                # se não existir, cria o diretório com o mês e ano
+                os.makedirs(month_folder_path)
+                print(f'Pasta {month_folder_path} criada com sucesso!')
+                new_file_path = os.path.join(month_folder_path, file_to_move)
+                shutil.move(current_file_path, new_file_path)
+                print(f'Arquivo {file_to_move} movido para {month_folder_path}') """
+
+
 
 
 

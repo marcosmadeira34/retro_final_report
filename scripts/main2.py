@@ -7,6 +7,12 @@ import art
 from time import sleep
 import schedule
 import functools
+import logging
+
+# configuração do logger
+logging.basicConfig(filename=r'C:\Users\marcos.silvaext\Documents\final_report_client\logs.log', level=logging.INFO,
+                    format='%(asctime)s:%(levelname)s:%(message)s')
+
 
 ascii_banner = art.text2art("Relatorio Final")
 colored_banner = cprint(ascii_banner, 'green')
@@ -38,25 +44,26 @@ if __name__ == "__main__":
         #sql.create_database()
         file_processor.delete_xml(files_path=extractor_file_path)
         sleep(0.5)
-        print(Fore.GREEN + 'CHECANDO NOVOS PEDIDOS ...' + Fore.RESET)
+        print(Fore.LIGHTYELLOW_EX + 'CHECANDO NOVOS PEDIDOS ...' + Fore.RESET)
         final_report.check_and_update_orders(extractor_file_path, 'pedido_faturamento')
         sleep(0.5)
-        print(Fore.GREEN + 'PEDIDOS CHECADOS COM SUCESSO!' + Fore.RESET)
-        print(Fore.GREEN + 'RENOMEANDO E FORMATANDO COLUNAS' + Fore.RESET)
+        print(Fore.LIGHTYELLOW_EX + 'PEDIDOS CHECADOS COM SUCESSO!\n' + Fore.RESET)
+        print(Fore.GREEN + 'PROCESSANDO E TRATANDO DADOS NOS ARQUIVOS' + Fore.RESET)
         final_report.rename_format_columns(news_orders)
         sleep(0.5)
-        file_processor.move_file_to_client_folder(source_directory=source_directory, target_directory=target_directory)
-        print(Fore.GREEN + 'MOVENDO PEDIDOS PARA DIRETÓRIO H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\02-SAÍDA_EXTRATOR' + Fore.RESET)
-        #print(Fore.GREEN + 'PEDIDOS MOVIDOS COM SUCESSO PARA H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\02-SAÍDA_EXTRATOR' + Fore.RESET)
+        
+        file_processor.move_files_to_month_subfolder(
+            directory_origin=r'\\10.10.4.7\Dados\Financeiro\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\03 - DATA_RAW',
+            target_directory=r'H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\02-SAÍDA_EXTRATOR')
+        
+        print(Fore.GREEN + 'MOVENDO ARQUIVOS PARA DIRETÓRIO DE SAÍDA' + Fore.RESET)
         sleep(0.5)
-        #file_processor.delete_new_files(files_path=news_orders)
-        #file_processor.delete_xlsx(files_path=extractor_file_path)
-        print(Fore.GREEN + 'AUTOMAÇÃO CONCLUÍDA!' + Fore.RESET)
-        # printa o horario da ultima execução
-        print(Fore.GREEN + 'ÚLTIMA EXECUÇÃO : ' + Fore.RESET + str(datetime.now()))
+        # formata dia e hora para nomear o arquivo
+        
+        print(Fore.GREEN + 'AUTOMAÇÃO CONCLUÍDA : ' + Fore.RESET + str(datetime.now().strftime('%d-%m-%Y_%H-%M-%S\n')))
+        logging.info('ÚLTIMA EXECUÇÃO : ' + str(datetime.now()))        
 
-        # Agendar a execução da função delete_xlsx para cada 10 minutos
-        # Agendar a execução da função delete_xlsx para cada 10 minutos
+        # Agendar a execução para mover arquivos para pasta de processados a cada 1 hora
         schedule_function = functools.partial(file_processor.move_file_to_client_folder, 
                                       source_directory=extractor_file_path,
                                       target_directory=processed_extrator_path)

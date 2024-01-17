@@ -14,7 +14,7 @@ class OrdersTable(Base):
     __tablename__ = 'pedidosfaturados'
     
     # evita que dados duplicados sejam inseridos no banco de dados
-    __table_args__ = (UniqueConstraint('pedido_faturamento', 'equipamento'),)
+    __table_args__ = (UniqueConstraint('pedido_faturamento', 'id_equipamento'),)
 
     # colunas da tabela
     id = Column(Integer, primary_key=True, autoincrement='auto')

@@ -12,13 +12,13 @@ colored_banner = cprint(ascii_banner, 'green')
 #ENTRDA DOS ARQUIVOS
 extractor_file_path = r"H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\99-EXTRATOR_PEDIDOS_DE_CLIENTES" # EXTRATOR
 # SAÍDA DOS ARQUIVOS
-batch_totvs_path = r'H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\02-SAÍDA_EXTRATOR' # CRIARÁ AS PASTA AQUI
+batch_totvs_path = r'H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\98-SAÍDA_EXTRATOR' # CRIARÁ AS PASTA AQUI
 #verificar se o pedido já foi faturado no banco de dados PostgresQL
 invoiced_orders = r'C:\DataWare\data\consolidated_files\consolidated_validated\PEDIDOS_FATURADOS' # PEDIDOS FATURADOS NO BANCO DE DADOS
 news_orders = r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS' # NOVOS PEDIDOS IDENTIFICADOS NO EXTRATOR
 output_merge_path = r'C:\DataWare\data\consolidated_files\consolidated_validated\MERGE_RELATÓRIO_FINAL' # RELATÓRIO FINAL 
 source_directory = r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS' # DIRETÓRIO DE ORIGEM DOS PEDIDOS
-target_directory = r'H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\02-SAÍDA_EXTRATOR' # DIRETÓRIO DE DESTINO DOS PEDIDOS
+target_directory = r'H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\98-SAÍDA_EXTRATOR' # DIRETÓRIO DE DESTINO DOS PEDIDOS
 
 # Diretório de destino para os arquivos que serão enviados para o cliente
 # usando fuzzywuzzy para encontrar o nome do cliente
@@ -72,7 +72,7 @@ if __name__ == "__main__":
                 #final_report.rename_format_columns(news_orders)
                 sleep(0.5)
                 #file_processor.move_file_to_client_folder(source_directory=source_directory, target_directory=target_base_directory)
-                print(Fore.GREEN + f'MOVENDO PEDIDOS PARA DIRETÓRIO H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\02-SAÍDA_EXTRATOR4' + Fore.RESET)
+                print(Fore.GREEN + f'MOVENDO PEDIDOS PARA DIRETÓRIO H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\98-SAÍDA_EXTRATOR4' + Fore.RESET)
                 #print(Fore.GREEN + 'PEDIDOS MOVIDOS COM SUCESSO PARA H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\02-SAÍDA_EXTRATOR' + Fore.RESET)
                 sleep(0.5)
                 #file_processor.delete_new_files(files_path=news_orders)
@@ -186,6 +186,12 @@ if __name__ == "__main__":
                 file_processor.make_new_folders(dataframe=r'H:\01 - FATURAMENTO\FATURAMENTO 2024\EXTRATOR\01 - JANEIRO 2024\1601_EXTRATOR COM PEDIDO.xlsx',
                                                 sheet_name='2-Resultado', engine='openpyxl',
                                                 directory=r'\\10.10.4.7\Dados\Financeiro\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\PASTAS_AJUSTADAS')
+            
+            elif option == 12:
+                file_processor.move_files_to_month_subfolder(directory_origin=r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS',
+                                                             target_directory=r'H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\PASTAS_AJUSTADAS_2'
+
+                )
             
             else:
                 print('Opção inválida')
