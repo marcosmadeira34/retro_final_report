@@ -230,7 +230,7 @@ class FinalReport:
                         # Verifica se há novos pedidos antes de continuar
                         if not new_orders_df.empty:
                             # caminho do diretório NOVOS_PEDIDOS
-                            path = r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS'
+                            path = r'\\10.10.4.7\Dados\Financeiro\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\03 - DATA_RAW'
                             # cria o diretório NOVOS_PEDIDOS se não existir
                             os.makedirs(path, exist_ok=True)
                             # percorre o DataFrame agrupando os pedidos por cliente
@@ -928,6 +928,16 @@ class FileProcessor:
                 os.makedirs(current_file_path_with_month)
                 print(f'Pasta {current_file_path_with_month} criada com sucesso!')    
                 # move o arquivo para o diretório correspondente ao nome do cliente
+
+            # caminho completo do arquivo de destino
+            destination_file_path = os.path.join(current_file_path_with_month, file_to_move)
+            
+            # verifica se o arquivo já existe e remove o arquivo no caso positivo
+            if os.path.exists(destination_file_path):
+                print(f'Arquivo {file_to_move} já existe no diretório {current_file_path_with_month}')
+                os.remove(destination_file_path)
+            
+            # move o arquivo para o diretório correspondente ao nome do cliente no caso negativo
             shutil.move(current_file_path, current_file_path_with_month)
             print(f'Arquivo {file_to_move} movido para {current_file_path_with_month}')
                       

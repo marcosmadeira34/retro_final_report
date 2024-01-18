@@ -12,13 +12,13 @@ colored_banner = cprint(ascii_banner, 'green')
 #ENTRDA DOS ARQUIVOS
 extractor_file_path = r"H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\99-EXTRATOR_PEDIDOS_DE_CLIENTES" # EXTRATOR
 # SAÍDA DOS ARQUIVOS
-batch_totvs_path = r'H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\98-SAÍDA_EXTRATOR' # CRIARÁ AS PASTA AQUI
+batch_totvs_path = r'H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\02-SAÍDA_EXTRATOR' # CRIARÁ AS PASTA AQUI
 #verificar se o pedido já foi faturado no banco de dados PostgresQL
 invoiced_orders = r'C:\DataWare\data\consolidated_files\consolidated_validated\PEDIDOS_FATURADOS' # PEDIDOS FATURADOS NO BANCO DE DADOS
 news_orders = r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS' # NOVOS PEDIDOS IDENTIFICADOS NO EXTRATOR
 output_merge_path = r'C:\DataWare\data\consolidated_files\consolidated_validated\MERGE_RELATÓRIO_FINAL' # RELATÓRIO FINAL 
 source_directory = r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS' # DIRETÓRIO DE ORIGEM DOS PEDIDOS
-target_directory = r'H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\98-SAÍDA_EXTRATOR' # DIRETÓRIO DE DESTINO DOS PEDIDOS
+target_directory = r'H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\02-SAÍDA_EXTRATOR' # DIRETÓRIO DE DESTINO DOS PEDIDOS
 
 # Diretório de destino para os arquivos que serão enviados para o cliente
 # usando fuzzywuzzy para encontrar o nome do cliente
@@ -95,7 +95,7 @@ if __name__ == "__main__":
 
                         for i in range(len(df_news_orders.astype(str))):
                             try:
-                                sql.insert_data('testemovimento',
+                                sql.insert_data('pedidosfaturados',
                                             codigo_cliente = df_news_orders['Codigo Cliente'][i],
                                             loja_cliente = df_news_orders['Loja Cliente'][i],
                                             nome_do_cliente = df_news_orders['Nome do Cliente'][i],
@@ -189,9 +189,9 @@ if __name__ == "__main__":
             
             elif option == 12:
                 file_processor.move_files_to_month_subfolder(directory_origin=r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS',
-                                                             target_directory=r'H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\PASTAS_AJUSTADAS_2'
+                                                             target_directory=r'\\10.10.4.7\Dados\Financeiro\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS')
 
-                )
+                
             
             else:
                 print('Opção inválida')
