@@ -95,7 +95,7 @@ if __name__ == "__main__":
 
                         for i in range(len(df_news_orders.astype(str))):
                             try:
-                                sql.insert_data('testemovimento',
+                                sql.insert_data('pedidosfaturados',
                                             codigo_cliente = df_news_orders['Codigo Cliente'][i],
                                             loja_cliente = df_news_orders['Loja Cliente'][i],
                                             nome_do_cliente = df_news_orders['Nome do Cliente'][i],
