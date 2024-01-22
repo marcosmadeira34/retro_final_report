@@ -191,7 +191,13 @@ class FinalReport:
                     # caminho completo do arquivo
                     file_path = os.path.join(extractor_file_path, filename)
                     # Carrega o arquivo e verifica extrator TOTVS com os pedidos
-                    extract_df = pd.read_excel(file_path, sheet_name='2-Resultado', engine='openpyxl')
+                    extract_df = pd.read_excel(file_path, sheet_name='2-Resultado', engine='openpyxl', header=1)
+
+                    # verifica se a coluna "Nome do Cliente" esta presente no indice 1(2ª linha)
+                    if 'Pedido Faturamento' in extract_df.iloc[1].values:
+                        extract_df.columns = extract_df.iloc[1]
+                                           
+                    
 
                     # Padroniza o nome da coluna para minúsculas e substitui espaços por underscore
                     extract_df.columns = extract_df.columns.str.lower().str.replace(' ', '_').str.replace('.', '') \
@@ -325,6 +331,23 @@ class FinalReport:
         print(f'Tempo de execução: {end_time - start_time}')
 
     
+    
+    def corrigir_valor_faturamento(valor):
+        try:
+            if pd.notna(valor):
+                # Remover pontos e substituir vírgula por ponto
+                valor = str(valor).replace('.', '').replace(',', '.')
+                # Certificar-se de que há apenas um ponto decimal
+                if valor.count('.') > 1:
+                    valor = valor.replace('.', '', valor.count('.') - 1)
+                return float(valor)
+            else:
+                return valor
+        except Exception as e:
+            print(f"Erro ao processar valor: {valor}, Erro: {e}")
+            return None
+    
+    
     """ Função que renomeia e formata o arquivo final com cores da Arklok"""
     def rename_format_columns(self, directory):
         
@@ -447,13 +470,14 @@ class FinalReport:
                      
                     # Converte os valores da coluna 'VALOR BRUTO' para float, substituindo vírgulas por pontos se necessário
                     #df['VLR TOTAL FATURAMENTO'] = df['VLR TOTAL FATURAMENTO'].apply(lambda x: float(str(x).replace(',', '.')) if pd.notna(x) else x)
-                    df['VLR TOTAL FATURAMENTO'] = df['VLR TOTAL FATURAMENTO'].apply(lambda x: float(str(x).replace('.', '').replace(',', '.')) if pd.notna(x) else x)
+                    df['VLR TOTAL FATURAMENTO'] = df['VLR TOTAL FATURAMENTO'].apply(self.corrigir_valor_faturamento)
 
                     
 
                     # salva o arquivo em excel
                     with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
                         df.to_excel(writer, sheet_name='CONSOLIDADO', index=False, engine='openpyxl')
+                        
 
                         
                         sintese_df = df.groupby(['PROJETO', 'OBRA', 'CONTRATO LEGADO'], as_index=False)['VLR TOTAL FATURAMENTO'].sum()
@@ -742,7 +766,7 @@ class FileProcessor:
     
     # função para excluir todos os arquivos da pasta copied_files
     def delete_xml(self, files_path):
-        logging.info(f"EXCLUINDO ARQUIVOS XML...")
+        #logging.info(f"EXCLUINDO ARQUIVOS XML...")
         # verifica se a pasta existe
         if not os.path.exists(files_path):
             logging.info(f"A pasta {files_path} não existe.")
@@ -942,20 +966,3 @@ class FileProcessor:
             print(f'Arquivo {file_to_move} movido para {current_file_path_with_month}')
                       
 
-
-            
-
-
-
-
-
-
-
-
-    #
-
-
-        
-    
-
-    

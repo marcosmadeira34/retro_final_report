@@ -26,7 +26,7 @@ invoiced_orders = r'C:\DataWare\data\consolidated_files\consolidated_validated\P
 news_orders = r'\\10.10.4.7\Dados\Financeiro\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\03 - DATA_RAW' # NOVOS PEDIDOS IDENTIFICADOS NO EXTRATOR
 output_merge_path = r'C:\DataWare\data\consolidated_files\consolidated_validated\MERGE_RELATÓRIO_FINAL' # RELATÓRIO FINAL 
 source_directory = r'\\10.10.4.7\Dados\Financeiro\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\03 - DATA_RAW' # DIRETÓRIO DE ORIGEM DOS PEDIDOS
-target_directory = r'H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\02-SAÍDA_EXTRATOR' # DIRETÓRIO DE DESTINO DOS PEDIDOS
+target_directory = r'H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS' # DIRETÓRIO DE DESTINO DOS PEDIDOS
 # move os arquivos para a pasta de arquivos processados a cada determinado tempo
 processed_extrator_path = r"\\10.10.4.7\Dados\Financeiro\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\04 - EXTRATORES PROCESSADOS"
 
@@ -54,7 +54,7 @@ if __name__ == "__main__":
         
         file_processor.move_files_to_month_subfolder(
             directory_origin=r'\\10.10.4.7\Dados\Financeiro\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\03 - DATA_RAW',
-            target_directory=r'H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\02-SAÍDA_EXTRATOR')
+            target_directory=r'H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS')
         
         print(Fore.GREEN + 'MOVENDO ARQUIVOS PARA DIRETÓRIO DE SAÍDA' + Fore.RESET)
         sleep(0.5)
