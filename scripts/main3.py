@@ -71,7 +71,7 @@ if __name__ == "__main__":
                 print(Fore.GREEN + 'RENOMEANDO E FORMATANDO COLUNAS' + Fore.RESET)
                 final_report.rename_format_columns(news_orders)
                 sleep(0.5)
-                #file_processor.move_file_to_client_folder(source_directory=source_directory, target_directory=target_base_directory)
+                file_processor.move_file_to_client_folder(source_directory=source_directory, target_directory=target_base_directory)
                 print(Fore.GREEN + f'MOVENDO PEDIDOS PARA DIRETÓRIO H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\98-SAÍDA_EXTRATOR4' + Fore.RESET)
                 #print(Fore.GREEN + 'PEDIDOS MOVIDOS COM SUCESSO PARA H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\02-SAÍDA_EXTRATOR' + Fore.RESET)
                 sleep(0.5)

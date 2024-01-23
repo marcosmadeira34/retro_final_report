@@ -332,7 +332,7 @@ class FinalReport:
 
     
     
-    def corrigir_valor_faturamento(valor):
+    def corrigir_valor_faturamento(self,valor):
         try:
             if pd.notna(valor):
                 # Remover pontos e substituir vírgula por ponto
@@ -470,8 +470,9 @@ class FinalReport:
                      
                     # Converte os valores da coluna 'VALOR BRUTO' para float, substituindo vírgulas por pontos se necessário
                     #df['VLR TOTAL FATURAMENTO'] = df['VLR TOTAL FATURAMENTO'].apply(lambda x: float(str(x).replace(',', '.')) if pd.notna(x) else x)
+                    
+                    # Aplicar a lógica de conversão na coluna 'VLR TOTAL FATURAMENTO'
                     df['VLR TOTAL FATURAMENTO'] = df['VLR TOTAL FATURAMENTO'].apply(self.corrigir_valor_faturamento)
-
                     
 
                     # salva o arquivo em excel
@@ -499,8 +500,8 @@ class FinalReport:
                         locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
 
                         # formatação da coluna VALOR A COBRAR
-                        sintese_df['VALOR A COBRAR'] = sintese_df['VALOR A COBRAR'].apply(lambda x: locale.currency(float(x) if pd.notna(x) else 0, grouping=True, symbol='R$'))
 
+                        sintese_df['VALOR A COBRAR'] = sintese_df['VALOR A COBRAR'].apply(lambda x: locale.currency(float(x) if pd.notna(x) else 0, grouping=True, symbol='R$'))
                         sintese_df.to_excel(writer, sheet_name='SÍNTESE', index=False)
 
 
