@@ -42,7 +42,7 @@ final_report = FinalReport(host_postgres)
 if __name__ == "__main__":
     while True:
         #sql.create_database()
-        file_processor.delete_xml(files_path=extractor_file_path)
+        #file_processor.delete_xml(files_path=extractor_file_path)
         sleep(0.5)
         print(Fore.LIGHTYELLOW_EX + 'CHECANDO NOVOS PEDIDOS ...' + Fore.RESET)
         final_report.check_and_update_orders(extractor_file_path, 'pedido_faturamento')
@@ -68,7 +68,7 @@ if __name__ == "__main__":
                                       source_directory=extractor_file_path,
                                       target_directory=processed_extrator_path)
 
-        schedule.every(1).hours.do(schedule_function)
+        schedule.every(2).minutes.do(schedule_function)
                                               
         schedule.run_pending()
         sleep(0.5)

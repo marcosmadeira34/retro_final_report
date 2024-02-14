@@ -236,7 +236,7 @@ class FinalReport:
                         # Verifica se há novos pedidos antes de continuar
                         if not new_orders_df.empty:
                             # caminho do diretório NOVOS_PEDIDOS
-                            path = r'\\10.10.4.7\Dados\Financeiro\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\03 - DATA_RAW'
+                            path = r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS'
                             # cria o diretório NOVOS_PEDIDOS se não existir
                             os.makedirs(path, exist_ok=True)
                             # percorre o DataFrame agrupando os pedidos por cliente
@@ -472,18 +472,22 @@ class FinalReport:
                     #df['VLR TOTAL FATURAMENTO'] = df['VLR TOTAL FATURAMENTO'].apply(lambda x: float(str(x).replace(',', '.')) if pd.notna(x) else x)
                     
                     # Aplicar a lógica de conversão na coluna 'VLR TOTAL FATURAMENTO'
-                    df['VLR TOTAL FATURAMENTO'] = df['VLR TOTAL FATURAMENTO'].apply(self.corrigir_valor_faturamento)
+                    #df['VLR TOTAL FATURAMENTO'] = df['VLR TOTAL FATURAMENTO'].apply(self.corrigir_valor_faturamento)
                     
 
                     # salva o arquivo em excel
                     with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
                         df.to_excel(writer, sheet_name='CONSOLIDADO', index=False, engine='openpyxl')
-                        
+                        # converter para float para realizar a soma posteriormente
+                        #df['VLR TOTAL FATURAMENTO'] = df['VLR TOTAL FATURAMENTO'].apply(lambda x: float(str(x).replace(',', '.')) if pd.notna(x) else x)
+                        df['VLR TOTAL FATURAMENTO'] = df['VLR TOTAL FATURAMENTO'].apply(lambda x: float(''.join(filter(str.isdigit, str(x)))) if pd.notna(x) else x)
 
-                        
                         sintese_df = df.groupby(['PROJETO', 'OBRA', 'CONTRATO LEGADO'], as_index=False)['VLR TOTAL FATURAMENTO'].sum()
                         sintese_df = sintese_df.rename(columns={'VLR TOTAL FATURAMENTO': 'VALOR A COBRAR'})
 
+                        # Verificar se os valores na coluna "VALOR A COBRAR" são numéricos
+                        #sintese_df['VALOR A COBRAR'] = pd.to_numeric(sintese_df['VALOR A COBRAR'], errors='coerce')
+                        
                         # formatação da planilha "CONSOLIDADO"
                         worksheet = writer.sheets['CONSOLIDADO']
                         for column in range(1, worksheet.max_column + 1):
@@ -500,10 +504,13 @@ class FinalReport:
                         locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
 
                         # formatação da coluna VALOR A COBRAR
+                        #sintese_df['VALOR A COBRAR'] = sintese_df['VALOR A COBRAR'].apply(lambda x: locale.currency(x if pd.notna(x) else 0, grouping=True) if isinstance(x, (int, float)) else x)
+                        sintese_df['VALOR A COBRAR'] = sintese_df['VALOR A COBRAR']\
+                            .apply(lambda x: locale.currency(float(x) if pd.notna(x) else 0, grouping=True, symbol='R$'))
 
-                        sintese_df['VALOR A COBRAR'] = sintese_df['VALOR A COBRAR'].apply(lambda x: locale.currency(float(x) if pd.notna(x) else 0, grouping=True, symbol='R$'))
+
+                        #sintese_df['VALOR A COBRAR'] = sintese_df['VALOR A COBRAR'].apply(lambda x: locale.currency(float(x) if pd.notna(x) else 0, grouping=True, symbol='R$'))
                         sintese_df.to_excel(writer, sheet_name='SÍNTESE', index=False)
-
 
                         # Adiciona "TOTAL" abaixo da célula "C"
                         worksheet = writer.sheets['SÍNTESE']
@@ -512,10 +519,9 @@ class FinalReport:
                         # negrito na célula "TOTAL"
                         worksheet.cell(row=worksheet.max_row, column=3).font = Font(bold=True)
                         
-
                         # Soma os valores da coluna "D" (VALOR A COBRAR)
                         total_valor_a_cobrar = sintese_df['VALOR A COBRAR'].apply(lambda x: locale.atof(x.split()[1])).sum()
-
+                        
                         # negrito na célula "VALOR A COBRAR"
                         worksheet.cell(row=worksheet.max_row, column=4).font = Font(bold=True)
                         
@@ -524,11 +530,6 @@ class FinalReport:
                         
                         worksheet.cell(row=worksheet.max_row, column=4, value=total_valor_a_cobrar)
 
-                        # Adiciona logotipo ao cabeçalho da sheet 'SÍNTESE'
-                        #img = Image(logo_path)
-                        #worksheet.add_image(img, 'A1')
-
-                        
                         # Aplicar cor vermelha ao cabeçalho das colunas A, B, C e D e negrito e tipografia "Alwyn New Light"
                         for column in 'ABCD':
                             header_cell = worksheet[f"{column}1"]
@@ -552,7 +553,7 @@ class FinalReport:
                         writer.sheets['SÍNTESE'].column_dimensions['A'].width = 20
                         writer.sheets['SÍNTESE'].column_dimensions['B'].width = 15
                         writer.sheets['SÍNTESE'].column_dimensions['C'].width = 31
-                        writer.sheets['SÍNTESE'].column_dimensions['D'].width = 23           
+                        writer.sheets['SÍNTESE'].column_dimensions['D'].width = 23          
 
                     #print(f'Arquivos formatados com sucesso em {file_path}')
 
@@ -805,13 +806,13 @@ class FileProcessor:
     def find_closest_match(self, client_name, target_base_directory):
         # Lista de diretórios de destino disponíveis
         target_directories = [d for d in os.listdir(target_base_directory)]
-        print(f'Diretórios de destino: {target_directories}')
+        #print(f'Diretórios de destino: {target_directories}')
 
         # Encontra a correspondência mais próxima no diretório de destino usando fuzzywuzzy
         best_match, score = process.extractOne(client_name, target_directories)
 
         # Define um limite de confiança de 80%
-        threshold = 50
+        threshold = 90
         if best_match and score >= threshold:
             # Substituir caracteres inválidos ou limitar o tamanho do nome do diretório
             valid_directory_name = ''.join(char for char in best_match if char.isalnum() or char in [' ', '_'])
@@ -838,11 +839,11 @@ class FileProcessor:
                     client_name = filename.split('_')[1].split('.')[0]
                     print(f'Cliente: {client_name}')
 
-                    target_directory = self.find_closest_match(client_name, target_directory)
-                    print(f'Diretório de destino: {target_directory}')
+                    current_target_directory = self.find_closest_match(client_name, target_directory)
+                    print(f'Diretório de destino: {current_target_directory}')
 
-                    if target_directory:
-                        target_path = os.path.join(target_directory, client_name)
+                    if current_target_directory:
+                        target_path = os.path.join(current_target_directory, client_name)
                         os.makedirs(target_path, exist_ok=True)
 
                         target_path_file = os.path.join(target_path, filename)
@@ -866,6 +867,7 @@ class FileProcessor:
         except PermissionError as e:
             print(f"O arquivo {source_directory} está aberto: {e}")
             print(f'Mova o arquivo manualmente para o diretório {target_path}')
+            
             return False
 
 
@@ -942,6 +944,7 @@ class FileProcessor:
             client_name_start = file_to_move.find('_') + 1
             client_name_end = file_to_move.find('.', client_name_start)
             client_name = file_to_move[client_name_start:client_name_end]
+            client_name.split('.', ' ')
             print(f'Nome do cliente: {client_name}')               
 
             # estabelece caminho completo do arquivo na destino
@@ -967,3 +970,151 @@ class FileProcessor:
             print(f'Arquivo {file_to_move} movido para {current_file_path_with_month}')
                       
 
+
+# função refatorado para o streamlit
+import os
+import pandas as pd
+from sqlalchemy.exc import IntegrityError
+import time
+from colorama import Fore
+from concurrent.futures import ThreadPoolExecutor
+import re
+import unidecode
+from streamlit import file_uploader
+
+
+class TesteStreamlit:
+    def __init__(self, host):
+        # Crie uma instância de ConnectPostgresQL usando o host do seu banco de dados PostgreSQL
+        self.db_connection = ConnectPostgresQL(host)
+        self.session = self.db_connection.Session()
+
+
+    def check_and_update_orders_streamlit(self, uploaded_file:file_uploader, col, progress_callback=None):
+        start = time.time()
+        """Método para verificar e atualizar pedidos ausentes no banco de dados"""
+
+        try:
+            # Carrega o arquivo fornecido pelo usuário
+            extract_df = pd.read_excel(uploaded_file, sheet_name='2-Resultado', engine='openpyxl', header=1)
+
+            # verifica se a coluna "Nome do Cliente" esta presente no indice 1(2ª linha)
+            if 'Pedido Faturamento' in extract_df.iloc[1].values:
+                extract_df.columns = extract_df.iloc[1]
+
+            # Padroniza o nome da coluna para minúsculas e substitui espaços por underscore
+            extract_df.columns = extract_df.columns.str.lower().str.replace(' ', '_').str.replace('.', '') \
+                .str.replace('-', '') \
+                .str.replace('ç', 'c') \
+                .str.replace('cálculo_reajuste', 'calculo_reajuste')  # Remove o acento "´"
+
+            # Verifica se a coluna existe no arquivo
+            col_lower = col.lower().replace(' ', '_')
+            if col_lower not in extract_df.columns:
+                print(f'Coluna {col} não encontrada no arquivo')
+                return
+
+            # Converte a coluna PEDIDO para numérico
+            extract_df[col_lower] = pd.to_numeric(extract_df[col_lower], errors='coerce')
+            print(f'Total de registros no extrator: {len(extract_df)}')
+
+            # Filtra o DataFrame para incluir apenas os pedidos mais recentes
+            extract_df = extract_df[extract_df[col_lower] >= 0]
+
+            # Carrega os pedidos já existentes no banco de dados, convertendo a coluna para inteiro
+            existing_orders = set(int(order) for order in pd.read_sql_query(
+                f'SELECT DISTINCT {col} FROM {OrdersTable.__tablename__}', self.db_connection.engine)[col])
+
+            # Identifica os pedidos ausentes
+            new_orders = set(extract_df[col_lower]) - existing_orders
+            print(f'Total de novos pedidos no extrator: {len(new_orders)}')
+
+            if len(new_orders) > 0:
+                # Reinicializa a variável new_orders_df
+                new_orders_df = pd.DataFrame()
+
+                # Cria um DataFrame apenas com os pedidos ausentes
+                new_orders_df = extract_df[extract_df[col_lower].isin(new_orders)].copy()
+
+                # Verifica se há novos pedidos antes de continuar
+                if not new_orders_df.empty:
+                    # caminho do diretório NOVOS_PEDIDOS
+                    path = r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS'
+                    # cria o diretório NOVOS_PEDIDOS se não existir
+                    os.makedirs(path, exist_ok=True)
+                    # percorre o DataFrame agrupando os pedidos por cliente
+                    for order_number, order_group in new_orders_df.groupby(col_lower):
+                        # remove caracteres inválidos do nome do cliente e cria o nome do arquivo
+                        client_name_valid = order_group['nome_do_cliente'].iloc[0].translate(
+                            str.maketrans('', '', r'\/:*?"<>|'))
+                        # define o nome e cria o arquivo
+                        file_name = f'{order_number}_{client_name_valid}.xlsx'
+                        # caminho completo do arquivo para salvar
+                        file_path = os.path.join(path, file_name)
+                        # salva o arquivo em excel
+                        order_group.to_excel(file_path, sheet_name='CONSOLIDADO', index=False, engine='openpyxl')
+                        print(f'Novo arquivo {file_name} criado.')
+
+                        # Atualize o progresso
+                        if progress_callback is not None:
+                            progress_callback((len(new_orders_df) / len(new_orders)) * 100)
+
+                    # Atualiza o banco de dados com os pedidos ausentes
+                    print('Atualizando banco de dados....!')
+                    try:
+                        new_orders_df = new_orders_df.rename(columns={'cálculo_reajuste': 'calculo_reajuste'})
+
+                        new_orders_df.to_sql(OrdersTable.__tablename__, self.db_connection.engine, if_exists='append', index=False, method='multi')
+                        print(Fore.GREEN + 'Banco de dados atualizado com novos pedidos' + Fore.RESET)
+                    except IntegrityError as e:
+                        print('Erro ao atualizar o banco de dados:', e)
+
+                    # pula o processamento dos clientes abaixo (grandes clientes)
+                    special_clients = ['teste']
+
+                    def save_order_excel(order, project):
+                        order_df = extract_df[extract_df[col_lower] == order]
+                        
+                        if not order_df.empty:
+                            client_name = order_df['CLIENTE'].iloc[0]
+                            
+                            if client_name in special_clients:
+                                print(f'Relatório {client_name} será gerado manualmente')
+                                return
+
+                            client_name_safe = re.sub(r'[^a-zA-Z0-9_]', '_', unidecode.unidecode(client_name))
+                            sheet_names = ['LAVORO', 'CONSOLIDADO']
+
+                            # itera sobre as sheets do arquivo
+                            for sheet in sheet_names:
+                                # Define o nome do arquivo no padrão desejado, incluindo o número do projeto
+                                file_name = f'{project}_{order}_{client_name_safe}.xlsx'
+                                # Caminho completo do arquivo para salvar
+                                file_path = os.path.join(path, file_name)
+                                # Salva o arquivo em excel
+                                order_df.to_excel(file_path, sheet_name=sheet, index=False, engine='openpyxl')
+                                print(f'Arquivo {file_name} criado.')
+
+                                # Atualize o progresso
+                                if progress_callback is not None:
+                                    progress_callback((len(new_orders_df) / len(new_orders)) * 100)
+                                    
+
+                    with ThreadPoolExecutor() as executor:
+                        executor.map(lambda order: save_order_excel(order, 'projeto'), new_orders)
+
+                    print(f'Pedidos salvos no diretório NOVOS_PEDIDOS')
+                    print('Verificação e atualização concluídas.\n')
+                    end = time.time()
+                    #print(f'Tempo de execução do código: {end - start}')
+
+                else:
+                    print('Nenhum pedido novo encontrado.\n')
+
+        except PermissionError as e:
+            print(f"Erro de permissão ao acessar o arquivo: {e}")
+            print('Corrija as permissões e tente novamente.')
+            return False
+        except Exception as e:
+            print(f"Erro ao processar arquivo: {e}")
+            return False
