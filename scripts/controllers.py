@@ -17,13 +17,9 @@ import locale
 from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
 #import pyspark.pandas as pd
 from fuzzywuzzy import process
+from streamlit import file_uploader
+from time import sleep
 
-
-
-
-# configuração do logger
-logging.basicConfig(filename=r'C:\Users\marcos.silvaext\Documents\final_report_client\logs.log', level=logging.INFO,
-                    format='%(asctime)s:%(levelname)s:%(message)s')
 
 
 class FinalReport:
@@ -100,77 +96,6 @@ class FinalReport:
                     return None
                     
                 
-    """ função para renomear as colunas do arquivo final"""
-    def rename_columns(self, directory):
-        new_names = {
-            'codigo_cliente': 'CÓDIGO CLIENTE',
-            'loja_cliente': 'LOJA CLIENTE',
-            'nome_do_cliente': 'NOME DO CLIENTE',
-            'cnpj_do_cliente': 'CNPJ DO CLIENTE',
-            'cnpj_de_faturamento': 'CNPJ DE FATURAMENTO',
-            'cnpj_de_remessa': 'CNPJ DE REMESSA',
-            'equipamento': 'EQUIPAMENTO',
-            'nota_de_remessa': 'NOTA DE REMESSA',
-            'data_de_remessa': 'DATA DE REMESSA',
-            'serie_da_nf_remessa': 'SERIE DA NF REMESSA',
-            'produto': 'PRODUTO',
-            'descricao_do_produto': 'DESCRIÇÃO DO PRODUTO',
-            'quantidade': 'QUANTIDADE',
-            'pedido_de_remessa': 'PEDIDO DE REMESSA',
-            'projeto': 'PROJETO',
-            'obra': 'OBRA',
-            'prazo_do_contrato': 'PRAZO DO CONTRATO',
-            'data_ativacao_legado': 'DATA ATIVAÇÃO LEGADO',
-            'data_de_ativacao': 'DATA DE ATIVACAO',
-            'ultimo_faturamento': 'ÚLTIMO FATURAMENTO',
-            #'periodo_final': 'PERIODO FINAL',
-            'data_do_termo': 'DATA DO TERMO',
-            'aniversario': 'DATA BASE REAJUSTE',
-            'desc_ajuste': 'DESC AJUSTE',
-            'indice_aplicado': 'ÍNDICE APLICADO',
-            'dias_de_locacao': 'DIAS DE LOCAÇÃO',
-            'valor_de_origem': 'VALOR DE ORIGEM',
-            'valor_unitario': 'VALOR UNITÁRIO',
-            'valor_bruto': 'VALOR BRUTO',
-            'tipo_do_mes': 'TIPO DO MES',
-            #'nr_chamado': 'NR CHAMADO',
-            'contrato_legado': 'CONTRATO LEGADO',
-            'acrescimo': 'ACRÉSCIMO',
-            'franquia': 'FRANQUIA',
-            'id_equipamento': 'ID EQUIPAMENTO',
-            'id_equip_substituido': 'ID EQUIP SUBSTITUIDO',
-            'data_da_substituicao': 'DATA DA SUBSTITUICAO',
-            'data_proximo_faturamento': 'DATA PRÓXIMO FATURAMENTO',
-            #'data_inicio': 'DATA INICIO',
-            'data_fim_locacao': 'DATA FIM LOCACAO',
-            'tipo_de_servico': 'TIPO DE SERVICO',
-            'email': 'E-MAIL',
-            'calculo_reajuste': 'CÁLCULO REAJUSTE',
-            'nome_da_obra': 'NOME DA OBRA',
-            'numero_da_as': 'NUMERO DA AS',
-            'pedido_faturamento': 'PEDIDO FATURAMENTO',
-            'nf_de_faturamento': 'NF DE FATURAMENTO',
-            'serie_de_faturamento': 'SERIE DE FATURAMENTO',
-            'data_de_faturamento': 'DATA DE FATURAMENTO',
-            'qtde_faturamento': 'QTDE FATURAMENTO',
-            'vlr_unitario_faturamento': 'VLR UNITÁRIO FATURAMENTO',
-            'vlr_total_faturamento': 'VLR TOTAL FATURAMENTO',
-            'periodo_de_faturamento': 'PERÍODO DE FATURAMENTO',
-            'status_de_cobranca': 'STATUS DE COBRANÇA',
-            }
-
-        for filename in os.listdir(directory):
-            if filename.endswith('.xlsx'):
-                # caminho completo do arquivo
-                file_path = os.path.join(directory, filename)
-                # Lê o arquivo
-                df = pd.read_excel(file_path, sheet_name='CONSOLIDADO', engine='openpyxl')
-                # renomeia as colunas
-                df = df.rename(columns=new_names)
-                # Salva o DataFrame em um arquivo excel
-                df.to_excel(file_path, sheet_name='CONSOLIDADO', index=False, engine='openpyxl')
-
-
     # verifica se o pedido existe no banco de dados
     def does_order_exist(self, order_number):
         query = f'SELECT 1 FROM {OrdersTable.__tablename__} WHERE {OrdersTable.__tablename__}.pedido_faturamento = {order_number} LIMIT 1'
@@ -195,9 +120,7 @@ class FinalReport:
 
                     # verifica se a coluna "Nome do Cliente" esta presente no indice 1(2ª linha)
                     if 'Pedido Faturamento' in extract_df.iloc[1].values:
-                        extract_df.columns = extract_df.iloc[1]
-                                           
-                    
+                        extract_df.columns = extract_df.iloc[1]                   
 
                     # Padroniza o nome da coluna para minúsculas e substitui espaços por underscore
                     extract_df.columns = extract_df.columns.str.lower().str.replace(' ', '_').str.replace('.', '') \
@@ -210,13 +133,21 @@ class FinalReport:
                     if col_lower not in extract_df.columns:
                         print(f'Coluna {col} não encontrada no arquivo')
                         return
-
+                        
+                    # Verifica se há células vazias na coluna PEDIDO e dropa as linhas
+                    extract_df = extract_df.dropna(subset=[col_lower])
+                    
+                  
                     # Converte a coluna PEDIDO para numérico
                     extract_df[col_lower] = pd.to_numeric(extract_df[col_lower], errors='coerce')
                     print(f'Total de registros no extrator: {len(extract_df)} | Arquivo {filename}')
 
                     # Filtra o DataFrame para incluir apenas os pedidos mais recentes
                     extract_df = extract_df[extract_df[col_lower] >= 0]
+
+                    # trata o possivel erro invalid literal for int() with base 10
+                    extract_df = extract_df[extract_df[col_lower].notna()]
+                    extract_df[col_lower] = extract_df[col_lower].astype(int)                    
 
                     # Carrega os pedidos já existentes no banco de dados, convertendo a coluna para inteiro
                     existing_orders = set(int(order) for order in pd.read_sql_query(
@@ -225,7 +156,8 @@ class FinalReport:
                     # Identifica os pedidos ausentes
                     new_orders = set(extract_df[col_lower]) - existing_orders
                     print(f'Total de novos pedidos no extrator: {len(new_orders)} | Arquivo {filename}')
-
+                    
+                    
                     if len(new_orders) > 0:
                         # Reinicializa a variável new_orders_df
                         new_orders_df = pd.DataFrame()
@@ -236,6 +168,7 @@ class FinalReport:
                         # Verifica se há novos pedidos antes de continuar
                         if not new_orders_df.empty:
                             # caminho do diretório NOVOS_PEDIDOS
+                            # path = r'\\10.10.4.7\Dados\Financeiro\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\03 - DATA_RAW'
                             path = r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS'
                             # cria o diretório NOVOS_PEDIDOS se não existir
                             os.makedirs(path, exist_ok=True)
@@ -299,13 +232,14 @@ class FinalReport:
                         else:
                             print('Nenhum pedido novo encontrado.\n')
 
+        
         except PermissionError as e:
             print(f"Erro de permissão ao acessar {extractor_file_path}: {e}")
             print('Corrija as permissões e tente novamente.')
             return False
         except Exception as e:
             print(f"Erro ao processar arquivo: {e}")
-            return False
+            pass
 
            
     """ Função que cria um arquivo único do cliente com todos os pedidos"""
@@ -357,57 +291,76 @@ class FinalReport:
             'loja_cliente': 'LOJA CLIENTE',
             'nome_do_cliente': 'NOME DO CLIENTE',
             'cnpj_do_cliente': 'CNPJ DO CLIENTE',
-            'cnpj_de_faturamento': 'CNPJ DE FATURAMENTO',
-            'cnpj_de_remessa': 'CNPJ DE REMESSA',
-            'equipamento': 'EQUIPAMENTO',
-            'nota_de_remessa': 'NOTA DE REMESSA',
-            'data_de_remessa': 'DATA DE REMESSA',
-            'serie_da_nf_remessa': 'SERIE DA NF REMESSA',
-            'produto': 'PRODUTO',
-            'descricao_do_produto': 'DESCRIÇÃO DO PRODUTO',
-            'quantidade': 'QUANTIDADE',
-            'pedido_de_remessa': 'PEDIDO DE REMESSA',
+            'email': 'E-MAIL',
+            'contrato_legado': 'CONTRATO LEGADO',
             'projeto': 'PROJETO',
             'obra': 'OBRA',
-            'prazo_do_contrato': 'PRAZO DO CONTRATO',
-            'data_de_ativacao_legado': 'DATA DE ATIVAÇÃO LEGADO',
-            'data_de_ativacao': 'DATA DE ATIVAÇÃO',
-            'ultimo_faturamento': 'ÚLTIMO FATURAMENTO',
-            #'periodo_final': 'PERIODO FINAL',
-            'data_do_termo': 'DATA DO TERMO',
-            'aniversario': 'DATA BASE REAJUSTE',
-            'desc_ajuste': 'ÍNDICE',
-            'indice_aplicado': 'ÍNDICE APLICADO',
-            'dias_de_locacao': 'DIAS DE LOCAÇÃO',
-            'valor_de_origem': 'VALOR DE ORIGEM',
-            'valor_unitario': 'VALOR UNITÁRIO',
-            'valor_bruto': 'VALOR BRUTO',
-            'tipo_do_mes': 'TIPO DO MES',
-            #'nr_chamado': 'NR CHAMADO',
-            'contrato_legado': 'CONTRATO LEGADO',
-            'acrescimo': 'ACRÉSCIMO',
-            'franquia': 'FRANQUIA',
+            'nome_da_obra': 'NOME DA OBRA',
+            'numero_da_as': 'NUMERO DA AS',
+            'pedido_de_remessa': 'PEDIDO DE REMESSA',
+            'nota_de_remessa': 'NOTA DE REMESSA',
+            'serie_da_nf_remessa': 'SERIE DA NF REMESSA',
+            'data_de_remessa': 'DATA DE REMESSA',
+            'cnpj_de_remessa': 'CNPJ DE REMESSA',
             'id_equipamento': 'ID EQUIPAMENTO',
             'id_equip_substituido': 'ID EQUIP SUBSTITUIDO',
             'data_da_substituicao': 'DATA DA SUBSTITUICAO',
-            'data_proximo_faturamento': 'DATA PRÓXIMO FATURAMENTO',
-            #'data_inicio': 'DATA INICIO',
-            'data_fim_locacao': 'DATA FIM LOCACAO',
+            'equipamento': 'EQUIPAMENTO',
             'tipo_de_servico': 'TIPO DE SERVICO',
-            'email': 'E-MAIL',
+            'tipo_de_operacao': 'TIPO DE OPERACAO',
+            'produto': 'PRODUTO',
+            'descricao_do_produto': 'DESCRIÇÃO DO PRODUTO',
+            'quantidade': 'QUANTIDADE',
+            'valor_de_origem': 'VALOR DE ORIGEM',
+            'valor_unitario': 'VALOR UNITÁRIO',
+            'valor_bruto': 'VALOR BRUTO',
+            'desconto': 'DESCONTO',
+            'acrescimo': 'ACRÉSCIMO',
+            'data_de_ativacao_legado': 'DATA DE ATIVAÇÃO LEGADO',
+            'data_de_ativacao': 'DATA DE ATIVAÇÃO',
+            'ultimo_faturamento': 'ÚLTIMO FATURAMENTO',
+            'data_proximo_faturamento': 'DATA PRÓXIMO FATURAMENTO',
+            'data_fim_locacao': 'DATA FIM LOCACAO',
+            'dias_de_locacao': 'DIAS DE LOCAÇÃO',
+            'prazo_do_contrato': 'PRAZO DO CONTRATO',
+            'previsao_retirada': 'PREVISÃO RETIRADA',
+            'solicitacao_retirada': 'SOLICITAÇÃO RETIRADA',
+            'tipo_do_mes': 'TIPO DO MÊS',
+            'mes_fixo': 'MÊS FIXO',
+            'data_base_reajuste': 'DATA BASE REAJUSTE',
+            'indexador': 'INDEXADOR',
+            'data_do_reajuste': 'DATA DO REAJUSTE',
+            'indice_aplicado': 'ÍNDICE APLICADO',
             'calculo_reajuste': 'CÁLCULO REAJUSTE',
-            'nome_da_obra': 'NOME DA OBRA',
-            'numero_da_as': 'NUMERO DA AS',
+            'franquia': 'FRANQUIA',
+            'class_faturaento': 'CLASS FATURAMENTO',
+            'cobra': 'COBRA ?',
+            'data_entrada': 'DATA ENTRADA',
+            'centro_de_custos': 'CENTRO DE CUSTOS',
             'pedido_faturamento': 'PEDIDO FATURAMENTO',
+            'emissao_pedido': 'EMISSÃO PEDIDO',
+            'qtde_pedido': 'QTDE PEDIDO',   
+            'vlr_unitario_pedido': 'VLR UNITÁRIO PEDIDO',
+            'vlr_total_pedido': 'VALOR TOTAL GERADO',
+            'percent_desconto': 'PERCENT DESCONTO',
+            'vlr_desconto': 'VLR DESCONTO',
+            'tes': 'TES',
+            'natureza': 'NATUREZA',
             'nf_de_faturamento': 'NF DE FATURAMENTO',
             'serie_de_faturamento': 'SERIE DE FATURAMENTO',
             'data_de_faturamento': 'DATA DE FATURAMENTO',
+            'cliente_faturamento': 'CLIENTE FATURAMENTO',
+            'loja_faturameto' : 'LOJA FATURAMENTO',
+            'nome_cli_faturamento': 'NOME CLI FATURAMENTO',
+            'cnpj_de_faturamento': 'CNPJ DE FATURAMENTO',
             'qtde_faturamento': 'QTDE FATURAMENTO',
             'vlr_unitario_faturamento': 'VLR UNITÁRIO FATURAMENTO',
             'vlr_total_faturamento': 'VLR TOTAL FATURAMENTO',
             'periodo_de_faturamento': 'PERÍODO DE FATURAMENTO',
-            'status_de_cobranca': 'STATUS DE COBRANÇA',
-            }
+            'origem_do_dado': 'ORIGEM DO DADO',
+            'serie_do_equipamento': 'SERIE DO EQUIPAMENTO',
+
+        }
         
         try:
             # percorre o diretório e localiza os arquivos excel 
@@ -422,24 +375,30 @@ class FinalReport:
                     df = df.rename(columns=new_names)
 
                     # dropas as colunas que não serão usadas
-                    columns_to_drop = ['CNPJ DE REMESSA', 'NOTA DE REMESSA', 'DATA DE REMESSA', 'SÉRIE DA NF REMESSA', 'PRODUTO',
-                                    'PEDIDO DE REMESSA', 'PRAZO DO CONTRATO', 'ÚLTIMO FATURAMENTO', 'DATA DO TERMO', 'TIPO DO MÊS',
-                                    'FRANQUIA', 'ID EQUIP SUBSTITUIDO', 'DATA DA SUBSTITUIÇÃO', 'DATA PRÓXIMO FATURAMENTO',
-                                    'DATA FIM LOCAÇÃO', 'TIPO DE SERVIÇO', 'E-MAIL', 'NOME DA OBRA', 'NUMERO DA AS', 'PEDIDO FATURAMENTO',
-                                    'NF DE FATURAMENTO', 'SÉRIE DE FATURAMENTO', 'DATA DE FATURAMENTO', 'QTDE FATURAMENTO', 'STATUS DE COBRANÇA']
+                    columns_to_drop = ['E-MAIL', 'NOME DA OBRA', 'NUMERO DA AS', 'PEDIDO DE REMESSA', 'NOTA DE REMESSA', 'SERIE DA NF REMESSA',
+                                       'DATA DE REMESSA', 'CNPJ DE REMESSA', 'ID EQUIP SUBSTITUIDO', 'DATA DA SUBSTITUICAO', 'TIPO DE SERVICO',
+                                       'TIPO DE OPERACAO', 'PRODUTO', 'DESCONTO', 'ÚLTIMO FATURAMENTO', 'DATA PRÓXIMO FATURAMENTO', 'DATA FIM LOCACAO',
+                                       'PRAZO DO CONTRATO', 'PREVISÃO RETIRADA', 'SOLICITAÇÃO RETIRADA', 'TIPO DO MÊS', 'MÊS FIXO',
+                                       'DATA DO REAJUSTE', 'FRANQUIA', 'CLASS FATURAMENTO', 'COBRA ?', 'DATA ENTRADA', 'CENTRO DE CUSTOS', 
+                                       'PEDIDO FATURAMENTO', 'EMISSÃO PEDIDO', 'QTDE PEDIDO', 'VLR UNITÁRIO PEDIDO', 'PERCENT DESCONTO', 
+                                       'VLR DESCONTO', 'TES', 'NATUREZA', 'SERIE DE FATURAMENTO', 'VLR UNITÁRIO FATURAMENTO', 
+                                       'CLIENTE FATURAMENTO', 'LOJA FATURAMENTO', 'NOME CLI FATURAMENTO', 'QTDE FATURAMENTO', 
+                                       'ORIGEM DO DADO', 'SERIE DO EQUIPAMENTO']
+                    
 
                     df = df.drop(columns_to_drop, axis=1, errors='ignore')
 
                     # reordena as colunas
                     df = df[['CÓDIGO CLIENTE', 'NOME DO CLIENTE', 'LOJA CLIENTE', 'CNPJ DO CLIENTE', 'CNPJ DE FATURAMENTO',
-                            'PROJETO', 'OBRA', 'ID EQUIPAMENTO', 'EQUIPAMENTO', 'DESCRIÇÃO DO PRODUTO', 'DATA DE ATIVAÇÃO LEGADO', 'DATA DE ATIVAÇÃO',
-                            'PERÍODO DE FATURAMENTO', 'DIAS DE LOCAÇÃO', 'VALOR UNITÁRIO', 'VALOR BRUTO',
-                            'VLR UNITÁRIO FATURAMENTO', 'QUANTIDADE', 'VLR TOTAL FATURAMENTO', 'DATA BASE REAJUSTE', 'ÍNDICE', 'VALOR DE ORIGEM',
-                            'CÁLCULO REAJUSTE', 'ÍNDICE APLICADO', 'ACRÉSCIMO', 'CONTRATO LEGADO']]
+                            'PROJETO', 'OBRA', 'ID EQUIPAMENTO', 'EQUIPAMENTO', 'DESCRIÇÃO DO PRODUTO', 'DATA DE ATIVAÇÃO LEGADO', 
+                            'PERÍODO DE FATURAMENTO', 'DIAS DE LOCAÇÃO', 'VALOR UNITÁRIO', 'VALOR BRUTO', 'DATA DE ATIVAÇÃO',
+                            'QUANTIDADE', 'VALOR TOTAL GERADO', 'VLR TOTAL FATURAMENTO', 
+                            'NF DE FATURAMENTO',  'DATA DE FATURAMENTO', 'DATA BASE REAJUSTE', 'VALOR DE ORIGEM', 
+                            'INDEXADOR', 'CÁLCULO REAJUSTE', 'ÍNDICE APLICADO', 'ACRÉSCIMO', 'CONTRATO LEGADO']]
                      
                     
                     # formata células com datas para o formato dd/mm/aaaa
-                    cols_date = ['DATA DE ATIVAÇÃO', 'DATA DE ATIVAÇÃO LEGADO', 'DATA BASE REAJUSTE']
+                    cols_date = ['DATA DE ATIVAÇÃO', 'DATA DE ATIVAÇÃO LEGADO', 'DATA BASE REAJUSTE', 'DATA DE FATURAMENTO']
                     
                     # itera sobre as colunas 
                     for col in cols_date:
@@ -468,26 +427,24 @@ class FinalReport:
                             except Exception as e:
                                 print(f'Erro ao converter cnpj: {e}')          
                      
-                    # Converte os valores da coluna 'VALOR BRUTO' para float, substituindo vírgulas por pontos se necessário
-                    #df['VLR TOTAL FATURAMENTO'] = df['VLR TOTAL FATURAMENTO'].apply(lambda x: float(str(x).replace(',', '.')) if pd.notna(x) else x)
-                    
+                                        
                     # Aplicar a lógica de conversão na coluna 'VLR TOTAL FATURAMENTO'
-                    #df['VLR TOTAL FATURAMENTO'] = df['VLR TOTAL FATURAMENTO'].apply(self.corrigir_valor_faturamento)
+                    df['VLR TOTAL FATURAMENTO'] = df['VLR TOTAL FATURAMENTO'].apply(self.corrigir_valor_faturamento)
+                    df['VALOR TOTAL GERADO'] = df['VALOR TOTAL GERADO'].apply(self.corrigir_valor_faturamento)
                     
 
                     # salva o arquivo em excel
                     with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
-                        df.to_excel(writer, sheet_name='CONSOLIDADO', index=False, engine='openpyxl')
-                        # converter para float para realizar a soma posteriormente
-                        #df['VLR TOTAL FATURAMENTO'] = df['VLR TOTAL FATURAMENTO'].apply(lambda x: float(str(x).replace(',', '.')) if pd.notna(x) else x)
-                        df['VLR TOTAL FATURAMENTO'] = df['VLR TOTAL FATURAMENTO'].apply(lambda x: float(''.join(filter(str.isdigit, str(x)))) if pd.notna(x) else x)
-
-                        sintese_df = df.groupby(['PROJETO', 'OBRA', 'CONTRATO LEGADO'], as_index=False)['VLR TOTAL FATURAMENTO'].sum()
-                        sintese_df = sintese_df.rename(columns={'VLR TOTAL FATURAMENTO': 'VALOR A COBRAR'})
-
-                        # Verificar se os valores na coluna "VALOR A COBRAR" são numéricos
-                        #sintese_df['VALOR A COBRAR'] = pd.to_numeric(sintese_df['VALOR A COBRAR'], errors='coerce')
+                        df.fillna({'CONTRATO LEGADO': '0'}, inplace=True)
                         
+                        df.to_excel(writer, sheet_name='CONSOLIDADO', index=False, engine='openpyxl')
+
+                        # sintese_df = df.groupby(['PROJETO', 'OBRA', 'CONTRATO LEGADO'], as_index=False)['VLR TOTAL FATURAMENTO'].sum()
+                        sintese_df = df.groupby(['PROJETO', 'OBRA', 'CONTRATO LEGADO'], as_index=False).agg({'VALOR TOTAL GERADO': 'sum', 'VLR TOTAL FATURAMENTO': 'sum'})
+
+                        sintese_df = sintese_df.rename(columns={'VLR TOTAL FATURAMENTO': 'VALOR TOTAL FATURADO'})
+                        # sintese_df = sintese_df.rename(columns={'VALOR TOTAL PEDIDO': 'VALOR TOTAL GERADO'})
+
                         # formatação da planilha "CONSOLIDADO"
                         worksheet = writer.sheets['CONSOLIDADO']
                         for column in range(1, worksheet.max_column + 1):
@@ -503,35 +460,46 @@ class FinalReport:
                         # Configuração para o formato brasileiro
                         locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
 
-                        # formatação da coluna VALOR A COBRAR
-                        #sintese_df['VALOR A COBRAR'] = sintese_df['VALOR A COBRAR'].apply(lambda x: locale.currency(x if pd.notna(x) else 0, grouping=True) if isinstance(x, (int, float)) else x)
-                        sintese_df['VALOR A COBRAR'] = sintese_df['VALOR A COBRAR']\
-                            .apply(lambda x: locale.currency(float(x) if pd.notna(x) else 0, grouping=True, symbol='R$'))
+                        # formatação da coluna VALOR TOTAL FATURADO
 
-
-                        #sintese_df['VALOR A COBRAR'] = sintese_df['VALOR A COBRAR'].apply(lambda x: locale.currency(float(x) if pd.notna(x) else 0, grouping=True, symbol='R$'))
+                        sintese_df['VALOR TOTAL FATURADO'] = sintese_df['VALOR TOTAL FATURADO'].apply(lambda x: locale.currency(float(x) if pd.notna(x) else 0, grouping=True, symbol='R$'))
+                        sintese_df['VALOR TOTAL GERADO'] = sintese_df['VALOR TOTAL GERADO'].apply(lambda x: locale.currency(float(x) if pd.notna(x) else 0, grouping=True, symbol='R$'))
                         sintese_df.to_excel(writer, sheet_name='SÍNTESE', index=False)
+
 
                         # Adiciona "TOTAL" abaixo da célula "C"
                         worksheet = writer.sheets['SÍNTESE']
-                        worksheet.cell(row=worksheet.max_row + 2, column=3, value='TOTAL')
+                        worksheet.cell(row=worksheet.max_row + 2, column=4, value='TOTAL')
 
                         # negrito na célula "TOTAL"
-                        worksheet.cell(row=worksheet.max_row, column=3).font = Font(bold=True)
+                        worksheet.cell(row=worksheet.max_row, column=4).font = Font(bold=True)
+                        worksheet.cell(row=worksheet.max_row, column=5).font = Font(bold=True)
                         
-                        # Soma os valores da coluna "D" (VALOR A COBRAR)
-                        total_valor_a_cobrar = sintese_df['VALOR A COBRAR'].apply(lambda x: locale.atof(x.split()[1])).sum()
-                        
-                        # negrito na célula "VALOR A COBRAR"
+
+                        # Soma os valores da coluna "D" (VALOR TOTAL FATURADO)
+                        total_valor_a_cobrar = sintese_df['VALOR TOTAL GERADO'].apply(lambda x: locale.atof(x.split()[1])).sum()
+                        # Soma os valores da coluna "E" (VALOR TOTAL FATURADO)
+                        total_valor_total_previo = sintese_df['VALOR TOTAL FATURADO'].apply(lambda x: locale.atof(x.split()[1])).sum()
+
+
+
+                        # negrito na célula "VALOR TOTAL FATURADO"
                         worksheet.cell(row=worksheet.max_row, column=4).font = Font(bold=True)
                         
-                        # formatação da soma dos valores da coluna "D" (VALOR A COBRAR)
+                        # formatação da soma dos valores da coluna "D, E"
                         total_valor_a_cobrar = locale.currency(total_valor_a_cobrar, grouping=True)
+                        total_valor_total_previo = locale.currency(total_valor_total_previo, grouping=True)
                         
                         worksheet.cell(row=worksheet.max_row, column=4, value=total_valor_a_cobrar)
+                        worksheet.cell(row=worksheet.max_row, column=5, value=total_valor_total_previo)
 
+                        # Adiciona logotipo ao cabeçalho da sheet 'SÍNTESE'
+                        #img = Image(logo_path)
+                        #worksheet.add_image(img, 'A1')
+
+                        
                         # Aplicar cor vermelha ao cabeçalho das colunas A, B, C e D e negrito e tipografia "Alwyn New Light"
-                        for column in 'ABCD':
+                        for column in 'ABCDE':
                             header_cell = worksheet[f"{column}1"]
                             header_cell.font = Font(color='FFFFFF', bold=True, name='Lato Regular', size=10)
                             header_cell.fill = PatternFill(start_color="FF0000", end_color="FF0000", fill_type="solid")
@@ -553,7 +521,8 @@ class FinalReport:
                         writer.sheets['SÍNTESE'].column_dimensions['A'].width = 20
                         writer.sheets['SÍNTESE'].column_dimensions['B'].width = 15
                         writer.sheets['SÍNTESE'].column_dimensions['C'].width = 31
-                        writer.sheets['SÍNTESE'].column_dimensions['D'].width = 23          
+                        writer.sheets['SÍNTESE'].column_dimensions['D'].width = 23
+                        writer.sheets['SÍNTESE'].column_dimensions['E'].width = 23           
 
                     #print(f'Arquivos formatados com sucesso em {file_path}')
 
@@ -586,8 +555,105 @@ class FinalReport:
                     print(f"Erro ao formatar colunas: {e}")
                     return None
                 
+           
+    # função get_excel_files de um diretório
+    def get_excel_files(self, folder_path):
+        try:
+            # lista todos os arquivos no diretório
+            files = [f for f in os.listdir(folder_path) if f.endswith('.xlsx')]
+            merged_data = pd.DataFrame()
+        except FileNotFoundError as e:
+            print(f'Arquivo não encontrado: {e}')
+            return None
+
+        # itera sobre cada arquivo no diretório
+        for file in files:
+            file_path = os.path.join(folder_path, file)
+            df = pd.read_excel(file_path, engine='openpyxl')
+            merged_data = merged_data._append(df, ignore_index=True)
+
+
+    # função para formatar CNPJ de um dataframe
+    def format_cnpj(self, cnpj):
+        if isinstance(cnpj, str) and len(cnpj) == 14 and cnpj.isdigit():
+            return f'{cnpj[:2]}.{cnpj[2:5]}.{cnpj[5:8]}/{cnpj[8:12]}.{cnpj[12:]}'
+        else:
+            return cnpj
 
     
+    # função para formatar CNPJ de uma coluna de um dataframe
+    def format_cnpj_column(self, df, column):
+        df[column] = df[column].apply(self.format_cnpj)
+
+
+    # função para escrever um dataframe em um arquivo excel
+    def write_to_excel(self, df, output_file, sheet_name):
+        
+        with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
+            df.to_excel(writer, sheet_name=sheet_name, index=False)
+
+            # agrupar os valores das colunas "VALOR TOTAL GERADO" e "VALOR TOTAL FATURADO" por "PROJETO", "OBRA" e "CONTRATO LEGADO"
+            sintese_df = df.groupby(['PROJETO', 'OBRA', 'CONTRATO LEGADO'], as_index=False).agg({'VALOR TOTAL GERADO': 'sum', 'VLR TOTAL FATURAMENTO': 'sum'})
+            sintese_df = sintese_df.rename(columns={'VLR TOTAL FATURAMENTO': 'VALOR TOTAL FATURADO'})
+    
+            # formatar largura das colunas
+            writer.sheets['SÍNTESE'].column_dimensions['A'].width = 20
+            writer.sheets['SÍNTESE'].column_dimensions['B'].width = 15
+            writer.sheets['SÍNTESE'].column_dimensions['C'].width = 31
+            writer.sheets['SÍNTESE'].column_dimensions['D'].width = 23
+            writer.sheets['SÍNTESE'].column_dimensions['E'].width = 23
+    
+    
+    # função para mesclar arquivos excel de um diretório
+    def merge_excel_files(self, dataframe):
+        return pd.concat(dataframe, ignore_index=True)
+    
+    
+    # função para síntese
+    def sintese_to_excel(self, dataframe, worksheet):
+        dataframe.to_excel(worksheet, sheet_name='SÍNTESE', index=False)
+
+           
+    # função para adicionar totais na planilha SÍNTESE e personalizar
+    def add_total_sintese(self, worksheet, sintese_df):
+        for column in range(1, worksheet.max_column + 1):
+            worksheet.cell(row=worksheet.max_row + 2, column=4, value='TOTAL')
+            worksheet.cell(row=worksheet.max_row, column=4).font = Font(color='FFFFFF', bold=True, name='Lato Regular', size=10)
+            worksheet.cell(row=worksheet.max_row, column=column).fill = PatternFill(start_color='FF0000', end_color='FF0000', fill_type='solid')
+
+            locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
+
+            total_valor_a_cobrar = sintese_df['VALOR TOTAL GERADO'].sum()
+            total_valor_previo = sintese_df['VALOR TOTAL FATURADO'].sum()
+
+            total_valor_a_cobrar = locale.currency(total_valor_a_cobrar, grouping=True)
+            total_valor_previo = locale.currency(total_valor_previo, grouping=True)
+
+            worksheet.cell(row=worksheet.max_row, column=4, value=total_valor_a_cobrar)
+            worksheet.cell(row=worksheet.max_row, column=5, value=total_valor_previo)
+
+
+    # função para formatar células de um arquivo excel
+    def format_worksheet(worksheet):
+        for column in 'ABCDE':
+            header_cell = worksheet[f'{column}1']
+            header_cell.font = Font(color='FFFFFF', bold=True, name='Lato Regular', size=10)
+            header_cell.fill = PatternFill(start_color='FF0000', end_color='FF0000', fill_type='solid')
+            header_cell.border = Border(left=Side(border_style='thin'), right=Side(border_style='thin'),
+                                        top=Side(border_style='thin'), bottom=Side(border_sytle='thin'))
+    
+            header_cell.alignment = Alignment(horizontal='left', vertical='center')    
+    #
+
+        for row in worksheet.iter_rows(min_row=1, max_row=worksheet.max_row, min_col=1, max_col=worksheet.max_column):
+            for cell in row:
+                cell.border = Border(left=Side(border_style='thin'),
+                                     right=Side(border_style='thin'),
+                                     top=Side(border_style='thin'),
+                                     bottom=Side(border_style='thin'))
+    
+
+
 # Classe para processar e listar arquivos do diretório
 class FileProcessor:
     # Definindo atributos da classe
@@ -603,6 +669,7 @@ class FileProcessor:
         return [(root, file) for root, dirs, files in os.walk(self.news_orders) \
                 for file in files if file.endswith(file_type    )]
 
+    
     # Método para processar os arquivos
     def process_file_list(self, filo_info):
         
@@ -646,7 +713,8 @@ class FileProcessor:
         else:
             return None
         
-   # Método para processar os arquivos em paralelo (multithreading) 
+    
+    # Método para processar os arquivos em paralelo (multithreading) 
     def process_files_in_parallel(self, file_infos):
         # Cria um pool de threads
         with ThreadPoolExecutor() as executor:            
@@ -654,6 +722,7 @@ class FileProcessor:
             results = executor.map(self.process_file_list, file_infos)
         # retorna os resultados usando list comprehension
         return [result for result in results if result is not None]
+    
     
     # Método para listar os arquivos
     def list_all_files(self, output_folder):
@@ -707,6 +776,7 @@ class FileProcessor:
             print(f'Ocorreu um erro no arquivo {self.news_orders}: {e}')
             return False
 
+    
     # Criar pastas no diretório H:\\
     def make_folders_clients(self, batch_totvs_path, extractor_path, sheet_name, col):
         # carrega o arquivo com os clientes
@@ -730,12 +800,22 @@ class FileProcessor:
             else:
                 print(f'Pasta {client} já existe!')
 
+    
     # função para excluir todos os arquivos da pasta copied_files
     def delete_xlsx(self, files_path):
-        logging.info(f"INICIANDO ROTINA 2 - EXCLUINDO ARQUIVOS DA PASTA COPIED_FILES...")
+        """
+        Deletes all .xlsx files in the specified directory.
+
+        Args:
+            files_path (str): The path to the directory containing the .xlsx files.
+
+        Returns:
+            bool: True if all files were successfully deleted, False otherwise.
+        """
+        
         # verifica se a pasta existe
         if not os.path.exists(files_path):
-            logging.info(f"A pasta {files_path} não existe.")
+            print(f"A pasta {files_path} não existe.")
             return
 
         try:
@@ -749,7 +829,6 @@ class FileProcessor:
                 if os.path.isfile(input_file_path) and os.access(input_file_path, os.R_OK):
                     # exclui o arquivo
                     os.remove(input_file_path)
-                    print(f"Arquivo {file_name} excluído com sucesso!")
                 else:
                     print(f"Arquivo {file_name} não encontrado ou permissão negada.")
             
@@ -763,7 +842,7 @@ class FileProcessor:
         
         except Exception as e:
             print(f"Ocorreu um erro ao excluir os arquivos: {e}")
-            return False 
+            return False
         
     
     # função para excluir todos os arquivos da pasta copied_files
@@ -771,7 +850,7 @@ class FileProcessor:
         #logging.info(f"EXCLUINDO ARQUIVOS XML...")
         # verifica se a pasta existe
         if not os.path.exists(files_path):
-            logging.info(f"A pasta {files_path} não existe.")
+            print(f"A pasta {files_path} não existe.")
             return
 
         try:
@@ -806,13 +885,12 @@ class FileProcessor:
     def find_closest_match(self, client_name, target_base_directory):
         # Lista de diretórios de destino disponíveis
         target_directories = [d for d in os.listdir(target_base_directory)]
-        #print(f'Diretórios de destino: {target_directories}')
-
+        
         # Encontra a correspondência mais próxima no diretório de destino usando fuzzywuzzy
         best_match, score = process.extractOne(client_name, target_directories)
 
         # Define um limite de confiança de 80%
-        threshold = 90
+        threshold = 50
         if best_match and score >= threshold:
             # Substituir caracteres inválidos ou limitar o tamanho do nome do diretório
             valid_directory_name = ''.join(char for char in best_match if char.isalnum() or char in [' ', '_'])
@@ -839,11 +917,11 @@ class FileProcessor:
                     client_name = filename.split('_')[1].split('.')[0]
                     print(f'Cliente: {client_name}')
 
-                    current_target_directory = self.find_closest_match(client_name, target_directory)
-                    print(f'Diretório de destino: {current_target_directory}')
+                    target_directory = self.find_closest_match(client_name, target_directory)
+                    
 
-                    if current_target_directory:
-                        target_path = os.path.join(current_target_directory, client_name)
+                    if target_directory:
+                        target_path = os.path.join(target_directory, client_name)
                         os.makedirs(target_path, exist_ok=True)
 
                         target_path_file = os.path.join(target_path, filename)
@@ -867,7 +945,6 @@ class FileProcessor:
         except PermissionError as e:
             print(f"O arquivo {source_directory} está aberto: {e}")
             print(f'Mova o arquivo manualmente para o diretório {target_path}')
-            
             return False
 
 
@@ -927,6 +1004,7 @@ class FileProcessor:
             self.move_files_to_month_subfolder(project, directory, month_year)
             
 
+    # movimenta os arquivos para a subpasta do mês e ano
     def move_files_to_month_subfolder(self, directory_origin, target_directory):
         # obtém os arquivos xlsx no subdiretório principal
         files_to_move = [file for file in os.listdir(directory_origin) if file.endswith('.xlsx') and not file.startswith('~$')]
@@ -944,10 +1022,10 @@ class FileProcessor:
             client_name_start = file_to_move.find('_') + 1
             client_name_end = file_to_move.find('.', client_name_start)
             client_name = file_to_move[client_name_start:client_name_end]
-            client_name.split('.', ' ')
             print(f'Nome do cliente: {client_name}')               
 
             # estabelece caminho completo do arquivo na destino
+            
             current_file_path_with_month = os.path.join(target_directory, client_name, month_year)
             
             # cria o diretório para o arquivo ser movido
@@ -970,19 +1048,24 @@ class FileProcessor:
             print(f'Arquivo {file_to_move} movido para {current_file_path_with_month}')
                       
 
+    # função para mover arquivos para diretório de processados simples
+    def move_files_to_processed_folder(self, directory_origin, target_directory):
+        # obtém os arquivos xlsx no subdiretório principal
+        files_to_move = [file for file in os.listdir(directory_origin) if file.endswith('.xlsx') and not file.startswith('~$')]
+        
+        for file_to_move in files_to_move:
+            # estabelece caminho completo do arquivo na origem
+            current_file_path_origin = os.path.join(directory_origin, file_to_move)
+            # estabelece caminho completo do arquivo na destino
+            current_file_path_target = os.path.join(target_directory, file_to_move)
+            # move o arquivo para o diretório correspondente ao nome do cliente
+            shutil.move(current_file_path_origin, current_file_path_target)
+            print(f'Arquivo {file_to_move} movido para {current_file_path_target}')
+        
+        
 
-# função refatorado para o streamlit
-import os
-import pandas as pd
-from sqlalchemy.exc import IntegrityError
-import time
-from colorama import Fore
-from concurrent.futures import ThreadPoolExecutor
-import re
-import unidecode
-from streamlit import file_uploader
-
-
+  
+        
 class TesteStreamlit:
     def __init__(self, host):
         # Crie uma instância de ConnectPostgresQL usando o host do seu banco de dados PostgreSQL
@@ -1039,7 +1122,7 @@ class TesteStreamlit:
                 # Verifica se há novos pedidos antes de continuar
                 if not new_orders_df.empty:
                     # caminho do diretório NOVOS_PEDIDOS
-                    path = r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS'
+                    path = r'\\10.10.4.7\Dados\Financeiro\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\03 - DATA_RAW'
                     # cria o diretório NOVOS_PEDIDOS se não existir
                     os.makedirs(path, exist_ok=True)
                     # percorre o DataFrame agrupando os pedidos por cliente
@@ -1118,3 +1201,8 @@ class TesteStreamlit:
         except Exception as e:
             print(f"Erro ao processar arquivo: {e}")
             return False
+
+    
+
+
+    

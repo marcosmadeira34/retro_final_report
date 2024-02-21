@@ -1,79 +1,95 @@
 from controllers import *
+from consolidador import MergeExcelReports
 from database import *
-from check_orders import *
 from colorama import Fore
 from termcolor import cprint
 import art
 from time import sleep
-import schedule
-import functools
-import logging
-
-# configuração do logger
-logging.basicConfig(filename=r'C:\Users\marcos.silvaext\Documents\final_report_client\logs.log', level=logging.INFO,
-                    format='%(asctime)s:%(levelname)s:%(message)s')
-
 
 ascii_banner = art.text2art("Relatorio Final")
 colored_banner = cprint(ascii_banner, 'green')
 
-#ENTRDA DOS ARQUIVOS
-extractor_file_path = r"H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\01-EXTRATOR_PEDIDOS_DE_CLIENTES" # EXTRATOR
-# SAÍDA DOS ARQUIVOS
-batch_totvs_path = r'H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\02-SAÍDA_EXTRATOR' # CRIARÁ AS PASTA AQUI
-#verificar se o pedido já foi faturado no banco de dados PostgresQL
-invoiced_orders = r'C:\DataWare\data\consolidated_files\consolidated_validated\PEDIDOS_FATURADOS' # PEDIDOS FATURADOS NO BANCO DE DADOS
-news_orders = r'\\10.10.4.7\Dados\Financeiro\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\03 - DATA_RAW' # NOVOS PEDIDOS IDENTIFICADOS NO EXTRATOR
-output_merge_path = r'C:\DataWare\data\consolidated_files\consolidated_validated\MERGE_RELATÓRIO_FINAL' # RELATÓRIO FINAL 
-source_directory = r'\\10.10.4.7\Dados\Financeiro\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\03 - DATA_RAW' # DIRETÓRIO DE ORIGEM DOS PEDIDOS
-target_directory = r'H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS' # DIRETÓRIO DE DESTINO DOS PEDIDOS
-# move os arquivos para a pasta de arquivos processados a cada determinado tempo
-processed_extrator_path = r"\\10.10.4.7\Dados\Financeiro\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\04 - EXTRATORES PROCESSADOS"
+
+
+# DIRETÓRIO DE ENTRADA DOS ARQUIVOS EXTRATORES (EXTRACTION)
+extractor_file_path = r"/home/administrator/WindowsShare/01 - FATURAMENTO/01 - CLIENTES - CONTROLE - 2024 TOTVS/01-EXTRATOR_PEDIDOS_DE_CLIENTES" # EXTRATOR
+
+# DIRETÓRIOS DE SAÍDA DOS ARQUIVOS CRIADOS (LOADING)
+batch_totvs_path = r'/home/administrator/WindowsShare/01 - FATURAMENTO/01 - CLIENTES - CONTROLE - 2024 TOTVS/02-SAÍDA_EXTRATOR' # CRIARÁ AS PASTA AQUI
+
+# DIRETÓRIO DE TRATAMENTO DOS ARQUIVOS (TRANSFORMATION)
+news_orders = r'/home/administrator/WindowsShare/Dados/Financeiro/01 - FATURAMENTO/01 - CLIENTES - CONTROLE - 2024 TOTVS/03 - DATA_RAW' # NOVOS PEDIDOS IDENTIFICADOS NO EXTRATOR
+source_directory = r'/home/administrator/WindowsShare/Financeiro/01 - FATURAMENTO/01 - CLIENTES - CONTROLE - 2024 TOTVS/03 - DATA_RAW' # DIRETÓRIO DE ORIGEM DOS PEDIDOS
+target_directory = r'/home/administrator/WindowsShare/01 - FATURAMENTO/01 - CLIENTES - CONTROLE - 2024 TOTVS' # DIRETÓRIO DE DESTINO DOS PEDIDOS
+
+# DIRETÓRIO DE ARQUIVOS PROCESSADOS (DRAFT)
+process_files = r'/home/administrator/WindowsShare/01 - FATURAMENTO/01 - CLIENTES - CONTROLE - 2024 TOTVS/04 - EXTRATORES PROCESSADOS'
+
+# DIRETÓRIOS AUXILIARES (SANDBOX)
+output_merge_path = r'C:/DataWare/data/consolidated_files/consolidated_validated/MERGE_RELATÓRIO_FINAL' # RELATÓRIO FINAL 
+invoiced_orders = r'C:/DataWare/data/consolidated_files/consolidated_validated/PEDIDOS_FATURADOS' # PEDIDOS FATURADOS NO BANCO DE DADOS
 
 
 file_processor = FileProcessor(extractor_file_path, invoiced_orders, news_orders, output_merge_path)
 host_postgres = 'postgresql://postgres:123456789@localhost:5432/postgres'
 sql = ConnectPostgresQL(host_postgres)
 final_report = FinalReport(host_postgres)
-#sql.create_database()
+merge_reports = MergeExcelReports()
 
 
 
 if __name__ == "__main__":
-    while True:
-        #sql.create_database()
-        #file_processor.delete_xml(files_path=extractor_file_path)
+    
+    # LOOP PRINCIPAL
+    while True:        
         sleep(0.5)
-        print(Fore.LIGHTYELLOW_EX + 'CHECANDO NOVOS PEDIDOS ...' + Fore.RESET)
+        print(Fore.YELLOW + 'CHECANDO NOVOS PEDIDOS ...' + Fore.RESET)
         final_report.check_and_update_orders(extractor_file_path, 'pedido_faturamento')
         sleep(0.5)
-        print(Fore.LIGHTYELLOW_EX + 'PEDIDOS CHECADOS COM SUCESSO!\n' + Fore.RESET)
-        print(Fore.GREEN + 'PROCESSANDO E TRATANDO DADOS NOS ARQUIVOS' + Fore.RESET)
+        print(Fore.YELLOW + 'FORMANTO ARQUIVOS....' + Fore.RESET)
         final_report.rename_format_columns(news_orders)
         sleep(0.5)
-        
+        print(Fore.YELLOW + 'MOVENDO ARQUIVOS PARA DIRETÓRIO....' + Fore.RESET)
         file_processor.move_files_to_month_subfolder(
-            directory_origin=r'\\10.10.4.7\Dados\Financeiro\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\03 - DATA_RAW',
-            target_directory=r'H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS')
-        
-        print(Fore.GREEN + 'MOVENDO ARQUIVOS PARA DIRETÓRIO DE SAÍDA' + Fore.RESET)
+            directory_origin=news_orders, target_directory=target_directory)
         sleep(0.5)
-        # formata dia e hora para nomear o arquivo
         
-        print(Fore.GREEN + 'AUTOMAÇÃO CONCLUÍDA : ' + Fore.RESET + str(datetime.now().strftime('%d-%m-%Y_%H-%M-%S\n')))
-        logging.info('ÚLTIMA EXECUÇÃO : ' + str(datetime.now()))        
+        # ETAPA DE CONSOLIDAÇÃO DOS ARQUIVOS
+        
+        # variável para armazenar a data atual
+        current_date = datetime.now()
+        # formata a data atual para o formato mm-aaaa
+        month_year = current_date.strftime('%m-%Y')
+        # Obtém a lista de subpastas criadas no diretório de destino
+        subfolders = [folder for folder in os.listdir(target_directory) if os.path.isdir(os.path.join(target_directory, folder))]
 
-        # Agendar a execução para mover arquivos para pasta de processados a cada 1 hora
-        schedule_function = functools.partial(file_processor.move_file_to_client_folder, 
-                                      source_directory=extractor_file_path,
-                                      target_directory=processed_extrator_path)
+        # Itera sobre cada subpasta
+        for subfolder in subfolders:
+            # Caminho para a pasta do cliente
+            client_folder = os.path.join(target_directory, subfolder, month_year)
+            # Chama a função para mesclar os relatórios Excel na pasta do cliente
+            print(Fore.YELLOW + f'CONSOLIDANDO ARQUIVOS EM {client_folder} ...' + Fore.RESET)
+            # verifica se algum arquivo no diretório inicia com "CONSOLIDADO"
+            if any(file.startswith('CONSOLIDADO') for file in os.listdir(client_folder)):
+                print(Fore.RED + 'Arquivo consolidado já existe!' + Fore.RESET)
+                continue
+            
+            # chama a função para mesclar os relatórios Excel na pasta do cliente
+            merge_reports.merge_excel_reports(client_folder, client_folder)       
+            print(Fore.YELLOW + f'ENVIANDO ARQUIVO PARA PASTA DE PROCESSADOS EM {extractor_file_path} ...' + Fore.RESET)
+            # move os arquivos consolidados para a pasta de processados
+            file_processor.move_files_to_processed_folder(
+                            directory_origin=extractor_file_path,
+                            target_directory=process_files)
+            
+            # Conclusão da automação	
+            print(Fore.LIGHTBLUE_EX + 'AUTOMAÇÃO CONCLUÍDA : ' + Fore.RESET + str(datetime.now().strftime('%d-%m-%Y_%H-%M-%S\n')))   
 
-        schedule.every(2).minutes.do(schedule_function)
-                                              
-        schedule.run_pending()
-        sleep(0.5)
 
-        #print(Fore.LIGHTYELLOW_EX + 'DELETANDO ARQUIVOS XLSX' + Fore.RESET)
+
+              
+
+        
 
         
 

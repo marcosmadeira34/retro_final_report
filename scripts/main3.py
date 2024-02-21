@@ -1,6 +1,6 @@
 from controllers import *
+from consolidador import MergeExcelReports
 from database import *
-from check_orders import *
 from colorama import Fore
 from termcolor import cprint
 import art
@@ -16,13 +16,10 @@ batch_totvs_path = r'H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\0
 #verificar se o pedido já foi faturado no banco de dados PostgresQL
 invoiced_orders = r'C:\DataWare\data\consolidated_files\consolidated_validated\PEDIDOS_FATURADOS' # PEDIDOS FATURADOS NO BANCO DE DADOS
 news_orders = r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS' # NOVOS PEDIDOS IDENTIFICADOS NO EXTRATOR
+target_directory = r'H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\02-SAÍDA_EXTRATOR' # DIRETÓRIO DE DESTINO DOS PEDIDOS
 output_merge_path = r'C:\DataWare\data\consolidated_files\consolidated_validated\MERGE_RELATÓRIO_FINAL' # RELATÓRIO FINAL 
 source_directory = r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS' # DIRETÓRIO DE ORIGEM DOS PEDIDOS
-target_directory = r'H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\02-SAÍDA_EXTRATOR' # DIRETÓRIO DE DESTINO DOS PEDIDOS
-
-# Diretório de destino para os arquivos que serão enviados para o cliente
-# usando fuzzywuzzy para encontrar o nome do cliente
-target_base_directory = r'H:\01 - FATURAMENTO\CLIENTES - CONTROLE\CLIENTES 2023 LEGADO DN4'
+process_files = r'H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\04 - EXTRATORES PROCESSADOS'
 
 
 
@@ -31,19 +28,16 @@ file_processor = FileProcessor(extractor_file_path, invoiced_orders, news_orders
 host_postgres = 'postgresql://postgres:123456789@localhost:5432/postgres'
 sql = ConnectPostgresQL(host_postgres)
 final_report = FinalReport(host_postgres)
-#sql.create_database()
+merge_reports = MergeExcelReports()
 
 
-
-if __name__ == "__main__":
+if __name__ == "__main__":   
     
-    
-    
+    # Criação do menu principal
     while True:
         print('------------------------------------------------')
         print(Fore.LIGHTYELLOW_EX + '                   MENU PRINCIPAL          ' + Fore.RESET)
         print('------------------------------------------------\n')
-
         print(' 1 - Checar novos pedidos\n',
               '2 - Extrato de novos pedidos\n',
               '3 - Inserir novos pedidos no banco de dados\n',
@@ -52,32 +46,58 @@ if __name__ == "__main__":
               '6 - Deletar pedidos do diretório Novos Pedidos\n',
               '7 - Mover pedidos para diretório H:\n',   
               '8 - Renomear e formatar colunas\n',
-              '9 - Valor Faturado Atual\n'           
-             
-              )
+              '9 - Valor Faturado Atual\n')
 
+        # Opção para o usuário escolher
         try:
             option = int(input('Digite a opção desejada: '))
 
             if option == 1:
-                # CHAMA FUNÇÃO 1
-
-                sql.create_database()
                 sleep(0.5)
-                print(Fore.GREEN + 'CHECANDO NOVOS PEDIDOS ...' + Fore.RESET)
+                print(Fore.YELLOW + 'CHECANDO NOVOS PEDIDOS ...' + Fore.RESET)
                 final_report.check_and_update_orders(extractor_file_path, 'pedido_faturamento')
                 sleep(0.5)
-                print(Fore.GREEN + 'PEDIDOS CHECADOS COM SUCESSO!' + Fore.RESET)
-                #print(Fore.GREEN + 'RENOMEANDO E FORMATANDO COLUNAS' + Fore.RESET)
-                #final_report.rename_format_columns(news_orders)
+                print(Fore.YELLOW + 'FORMANTO ARQUIVOS....' + Fore.RESET)
+                final_report.rename_format_columns(news_orders)
                 sleep(0.5)
-                #file_processor.move_file_to_client_folder(source_directory=source_directory, target_directory=target_base_directory)
-                #print(Fore.GREEN + f'MOVENDO PEDIDOS PARA DIRETÓRIO H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\98-SAÍDA_EXTRATOR4' + Fore.RESET)
-                #print(Fore.GREEN + 'PEDIDOS MOVIDOS COM SUCESSO PARA H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\02-SAÍDA_EXTRATOR' + Fore.RESET)
+                print(Fore.YELLOW + 'MOVENDO ARQUIVOS PARA DIRETÓRIO....' + Fore.RESET)
+                file_processor.move_files_to_month_subfolder(
+                    directory_origin=news_orders, target_directory=target_directory)
                 sleep(0.5)
-                #file_processor.delete_new_files(files_path=news_orders)
-                print(Fore.GREEN + 'AUTOMAÇÃO CONCLUÍDA!' + Fore.RESET)
+                
+                # ETAPA DE CONSOLIDAÇÃO DOS ARQUIVOS
+                
+                # variável para armazenar a data atual
+                current_date = datetime.now()
+                # formata a data atual para o formato mm-aaaa
+                month_year = current_date.strftime('%m-%Y')
+                # Obtém a lista de subpastas criadas no diretório de destino
+                subfolders = [folder for folder in os.listdir(target_directory) if os.path.isdir(os.path.join(target_directory, folder))]
+
+                # Itera sobre cada subpasta
+                for subfolder in subfolders:
+                    # Caminho para a pasta do cliente
+                    client_folder = os.path.join(target_directory, subfolder, month_year)
+                    # Chama a função para mesclar os relatórios Excel na pasta do cliente
+                    print(Fore.YELLOW + f'CONSOLIDANDO ARQUIVOS EM {client_folder} ...' + Fore.RESET)
+                    # verifica se algum arquivo no diretório inicia com "CONSOLIDADO"
+                    if any(file.startswith('CONSOLIDADO') for file in os.listdir(client_folder)):
+                        print(Fore.RED + 'Arquivo consolidado já existe!' + Fore.RESET)
+                        continue
+
+
+                    merge_reports.merge_excel_reports(client_folder, client_folder)       
+
+                    print(Fore.YELLOW + f'ENVIANDO ARQUIVO PARA PASTA DE PROCESSADOS EM {extractor_file_path} ...' + Fore.RESET)
+                    file_processor.move_files_to_processed_folder(
+                                    directory_origin=extractor_file_path,
+                                    target_directory=process_files)
+                    
+                #file_processor.delete_xlsx(extractor_file_path)       
+                print(Fore.LIGHTBLUE_EX + 'AUTOMAÇÃO CONCLUÍDA : ' + Fore.RESET + str(datetime.now().strftime('%d-%m-%Y_%H-%M-%S\n')))   
+                            
             
+                                  
             elif option == 2:
                 file_processor.list_all_files(news_orders)
                 final_report.rename_columns(news_orders)
