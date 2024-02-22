@@ -11,8 +11,7 @@ Base = declarative_base()
 # classe para definir a tabela no banco de dados
 class OrdersTable(Base):
     # nome da tabela no banco de dados
-    __tablename__ = 'novoextrator110'
-    
+    __tablename__ = 'pedidosfaturados_novo_extrator_20_02'
     # evita que dados duplicados sejam inseridos no banco de dados
     #__table_args__ = (UniqueConstraint('pedido_faturamento', 'id_equipamento'),)
 
