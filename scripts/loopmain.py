@@ -72,6 +72,10 @@ if __name__ == "__main__":
                 os.makedirs(client_folder)
                 print(f'Criando pasta para o cliente {subfolder} em {client_folder} ...')
 
+            if client_folder.endswith('01-EXTRATOR_PEDIDOS_DE_CLIENTES'):
+                print(Fore.RED + 'Pasta de origem encontrada!' + Fore.RESET)
+                continue    
+
             # Chama a função para mesclar os relatórios Excel na pasta do cliente
             print(Fore.YELLOW + f'CONSOLIDANDO ARQUIVOS EM {client_folder} ...' + Fore.RESET)
             # verifica se algum arquivo no diretório inicia com "CONSOLIDADO"

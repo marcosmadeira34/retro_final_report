@@ -168,8 +168,8 @@ class FinalReport:
                         # Verifica se há novos pedidos antes de continuar
                         if not new_orders_df.empty:
                             # caminho do diretório NOVOS_PEDIDOS
-                            path = r'/home/administrator/WindowsShare/01 - FATURAMENTO/03 - DATA_RAW'
-                            #path = r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS'
+                            #path = r'/home/administrator/WindowsShare/01 - FATURAMENTO/03 - DATA_RAW'
+                            path = r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS'
                             # cria o diretório NOVOS_PEDIDOS se não existir
                             os.makedirs(path, exist_ok=True)
                             # percorre o DataFrame agrupando os pedidos por cliente
@@ -1058,7 +1058,11 @@ class FileProcessor:
             current_file_path_origin = os.path.join(directory_origin, file_to_move)
             # estabelece caminho completo do arquivo na destino
             current_file_path_target = os.path.join(target_directory, file_to_move)
-            # move o arquivo para o diretório correspondente ao nome do cliente
+            # move o arquivo para o diretório correspondente ao nome do cliente se ele não estiver aberto
+            if current_file_path_origin.startswith('~$'):
+                print(f'Arquivo {file_to_move} está aberto')
+                return False
+
             shutil.move(current_file_path_origin, current_file_path_target)
             print(f'Arquivo {file_to_move} movido para {current_file_path_target}')
         
