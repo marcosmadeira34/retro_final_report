@@ -10,7 +10,7 @@ ascii_banner = art.text2art("Relatorio Final")
 colored_banner = cprint(ascii_banner, 'green')
 
 #ENTRDA DOS ARQUIVOS
-extractor_file_path = r"H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\99-EXTRATOR_PEDIDOS_DE_CLIENTES" # EXTRATOR
+extractor_file_path = r"H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\01-EXTRATOR_PEDIDOS_DE_CLIENTES" # EXTRATOR
 # SAÍDA DOS ARQUIVOS
 batch_totvs_path = r'H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\02-SAÍDA_EXTRATOR' # CRIARÁ AS PASTA AQUI
 #verificar se o pedido já foi faturado no banco de dados PostgresQL
@@ -19,7 +19,7 @@ news_orders = r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS
 target_directory = r'H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\02-SAÍDA_EXTRATOR' # DIRETÓRIO DE DESTINO DOS PEDIDOS
 output_merge_path = r'C:\DataWare\data\consolidated_files\consolidated_validated\MERGE_RELATÓRIO_FINAL' # RELATÓRIO FINAL 
 source_directory = r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS' # DIRETÓRIO DE ORIGEM DOS PEDIDOS
-process_files = r'H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\04 - EXTRATORES PROCESSADOS'
+process_files = r'H:\01 - FATURAMENTO\04 - EXTRATORES PROCESSADOS'
 
 
 
@@ -67,7 +67,7 @@ if __name__ == "__main__":
                 
                 # ETAPA DE CONSOLIDAÇÃO DOS ARQUIVOS
                 
-                # variável para armazenar a data atual
+                # # variável para armazenar a data atual
                 current_date = datetime.now()
                 # formata a data atual para o formato mm-aaaa
                 month_year = current_date.strftime('%m-%Y')
@@ -78,6 +78,11 @@ if __name__ == "__main__":
                 for subfolder in subfolders:
                     # Caminho para a pasta do cliente
                     client_folder = os.path.join(target_directory, subfolder, month_year)
+
+                    if not os.path.exists(client_folder):
+                        os.makedirs(client_folder)
+                        print(f'Criando pasta para o cliente {subfolder} em {client_folder} ...')
+
                     # Chama a função para mesclar os relatórios Excel na pasta do cliente
                     print(Fore.YELLOW + f'CONSOLIDANDO ARQUIVOS EM {client_folder} ...' + Fore.RESET)
                     # verifica se algum arquivo no diretório inicia com "CONSOLIDADO"
@@ -93,7 +98,7 @@ if __name__ == "__main__":
                                     directory_origin=extractor_file_path,
                                     target_directory=process_files)
                     
-                #file_processor.delete_xlsx(extractor_file_path)       
+                # #file_processor.delete_xlsx(extractor_file_path)       
                 print(Fore.LIGHTBLUE_EX + 'AUTOMAÇÃO CONCLUÍDA : ' + Fore.RESET + str(datetime.now().strftime('%d-%m-%Y_%H-%M-%S\n')))   
                             
             
