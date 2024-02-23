@@ -46,7 +46,7 @@ if __name__ == "__main__":
         print(Fore.YELLOW + 'CHECANDO NOVOS PEDIDOS ...' + Fore.RESET)
         final_report.check_and_update_orders(extractor_file_path, 'pedido_faturamento')
         sleep(0.5)
-        print(Fore.YELLOW + 'FORMANTO ARQUIVOS....' + Fore.RESET)
+        print(Fore.YELLOW + 'FORMANTANDO ARQUIVOS....' + Fore.RESET)
         final_report.rename_format_columns(news_orders)
         sleep(0.5)
         print(Fore.YELLOW + 'MOVENDO ARQUIVOS PARA DIRETÓRIO....' + Fore.RESET)

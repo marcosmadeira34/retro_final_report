@@ -39,6 +39,20 @@ class MergeExcelReports:
     
         
     
+    def corrigir_valor_faturamento(self,valor):
+        try:
+            if pd.notna(valor):
+                # Remover pontos e substituir vírgula por ponto
+                valor = str(valor).replace('.', '').replace(',', '.')
+                # Certificar-se de que há apenas um ponto decimal
+                if valor.count('.') > 1:
+                    valor = valor.replace('.', '', valor.count('.') - 1)
+                return float(valor)
+            else:
+                return valor
+        except Exception as e:
+            print(f"Erro ao processar valor: {valor}, Erro: {e}")
+            return None
 
 
 
@@ -89,12 +103,16 @@ class MergeExcelReports:
             return
 
         # nome do arquivo de saída com o nome do cliente
-        file_name = re.sub(r'[^\w\s]', '_', merged_data['NOME DO CLIENTE'].iloc[0])
+        file_name = merged_data['NOME DO CLIENTE'].iloc[0]
+        # remove caracteres especiais do nome do cliente
+        file_name = file_name.replace(' ', '_').replace('/', '_').replace('-', '_').replace('.', '_')
 
         # Limitar o comprimento do nome do arquivo
         max_filename_length = 255
         file_name = file_name[:max_filename_length].strip()
 
+        # Caminho completo para o arquivo de saída
+        os.makedirs(os.path.dirname(output_folder), exist_ok=True)  # Verifica se o diretório pai existe, se não, cria-o
         # Caminho completo para o arquivo de saída
         output_file = os.path.join(output_folder, f'CONSOLIDADO_{file_name}.xlsx')
 
@@ -103,6 +121,9 @@ class MergeExcelReports:
             print(f'Arquivo {output_file} já existe!')
             return
 
+        # Aplicar a lógica de conversão na coluna 'VLR TOTAL FATURAMENTO'
+        # merged_data['VLR TOTAL FATURAMENTO'] = merged_data['VLR TOTAL FATURAMENTO'].apply(self.corrigir_valor_faturamento)
+        # merged_data['VALOR TOTAL GERADO'] = ['VALOR TOTAL GERADO'].apply(self.corrigir_valor_faturamento)
         
         try:
             with pd.ExcelWriter(output_file, engine='openpyxl') as writer:

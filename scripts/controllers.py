@@ -10,7 +10,6 @@ from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 from database import ConnectPostgresQL, OrdersTable
 from sqlalchemy.exc import IntegrityError
-import logging
 import shutil 
 import re
 import locale
@@ -36,7 +35,7 @@ class FinalReport:
         self.db_connection.connect().close()
 
     # função para padronizar nomes das colunas        
-    def padronizar_nomes_colunas(df):
+    def padronizar_nomes_colunas(self, df):
         df.columns = (
             df.columns
             .str.lower()  # Converte para minúsculas
@@ -176,7 +175,7 @@ class FinalReport:
                             for order_number, order_group in new_orders_df.groupby(col_lower):
                                 # remove caracteres inválidos do nome do cliente e cria o nome do arquivo
                                 client_name_valid = order_group['nome_do_cliente'].iloc[0].translate(
-                                    str.maketrans('', '', r'\/:*?"<>|'))
+                                    str.maketrans('.', ' ', r'\/:*?"<>|'))
                                 # define o nome e cria o arquivo
                                 file_name = f'{order_number}_{client_name_valid}.xlsx'
                                 # caminho completo do arquivo para salvar
@@ -1054,7 +1053,7 @@ class FileProcessor:
             
             except OSError as e:
                 print(f'Erro ao mover o arquivo {file_to_move} possívelmente aberto: {e}')
-                return False:
+                return False
 
 
                       
