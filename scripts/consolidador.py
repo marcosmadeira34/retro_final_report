@@ -117,8 +117,8 @@ class MergeExcelReports:
             return
 
         # Aplicar a lógica de conversão na coluna 'VLR TOTAL FATURAMENTO'
-        # merged_data['VLR TOTAL FATURAMENTO'] = merged_data['VLR TOTAL FATURAMENTO'].apply(self.corrigir_valor_faturamento)
-        # merged_data['VALOR TOTAL GERADO'] = ['VALOR TOTAL GERADO'].apply(self.corrigir_valor_faturamento)
+        #merged_data['VLR TOTAL FATURAMENTO'] = merged_data['VLR TOTAL FATURAMENTO'].apply(self.corrigir_valor_faturamento)
+        #merged_data['VALOR TOTAL GERADO'] = merged_data['VALOR TOTAL GERADO'].apply(self.corrigir_valor_faturamento)
         
         try:
             with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
@@ -129,6 +129,8 @@ class MergeExcelReports:
                     {'VALOR TOTAL GERADO': 'sum', 'VLR TOTAL FATURAMENTO': 'sum'})
                 # renomear as colunas
                 sintese_df = sintese_df.rename(columns={'VLR TOTAL FATURAMENTO': 'VALOR TOTAL FATURADO'})
+
+                
 
                 # formatação da planilha "CONSOLIDADO"
                 worksheet = writer.sheets['RELATÓRIO']
@@ -155,8 +157,10 @@ class MergeExcelReports:
 
                 # Soma os valores da coluna "D" (VALOR TOTAL FATURADO)
                 total_valor_a_cobrar = sintese_df['VALOR TOTAL GERADO'].sum()
+                
                 # Soma os valores da coluna "E" (VALOR TOTAL FATURADO)
                 total_valor_total_previo = sintese_df['VALOR TOTAL FATURADO'].sum()
+
 
                 # negrito na célula "VALOR TOTAL FATURADO"
                 worksheet.cell(row=worksheet.max_row, column=4).font = Font(bold=True)

@@ -10,7 +10,7 @@ ascii_banner = art.text2art("Relatorio Final")
 colored_banner = cprint(ascii_banner, 'green')
 
 #ENTRDA DOS ARQUIVOS
-extractor_file_path = r"H:\01 - FATURAMENTO\99-EXTRATOR_PEDIDOS_DE_CLIENTES" # EXTRATOR
+extractor_file_path = r"H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\01-EXTRATOR_PEDIDOS_DE_CLIENTES" # EXTRATOR
 # SAÍDA DOS ARQUIVOS
 batch_totvs_path = r'H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS' # CRIARÁ AS PASTA AQUI
 #verificar se o pedido já foi faturado no banco de dados PostgresQL
@@ -54,9 +54,9 @@ if __name__ == "__main__":
 
             if option == 1:
                 
-                #sql.delete_all('pedidosfaturados_novo_extrator_novoextrator117')
-                #print(Fore.YELLOW + 'DELETANDO NOVOS PEDIDOS NO BANCO DE DADOS ...' + Fore.RESET)
-                pass
+                sql.delete_all('pedidosfaturados_novo_extrator_novoextrator117')
+                print(Fore.YELLOW + 'DELETANDO NOVOS PEDIDOS NO BANCO DE DADOS ...' + Fore.RESET)
+                #pass
 
             elif option == 2:
                 sleep(0.5)
@@ -64,8 +64,9 @@ if __name__ == "__main__":
                 final_report.check_and_update_orders(extractor_file_path, 'pedido_faturamento')
 
             elif option == 3:
-                print(Fore.YELLOW + 'FORMANTO ARQUIVOS....' + Fore.RESET)
+                print(Fore.YELLOW + 'FORMANTANDO ARQUIVOS....' + Fore.RESET)
                 final_report.rename_format_columns(news_orders)
+                print(Fore.YELLOW + 'ARQUIVOS FORMATADOS COM SUCESSO ...' + Fore.RESET)
                 
                 
             elif option == 4:

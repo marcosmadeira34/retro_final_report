@@ -428,7 +428,7 @@ class FinalReport:
                      
                                         
                     # Aplicar a lógica de conversão na coluna 'VLR TOTAL FATURAMENTO'
-                    #df['VLR TOTAL FATURAMENTO'] = df['VLR TOTAL FATURAMENTO'].apply(self.corrigir_valor_faturamento)
+                    df['VLR TOTAL FATURAMENTO'] = df['VLR TOTAL FATURAMENTO'].apply(self.corrigir_valor_faturamento)
                     df['VALOR TOTAL GERADO'] = df['VALOR TOTAL GERADO'].apply(self.corrigir_valor_faturamento)
                     
 
