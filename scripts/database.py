@@ -11,7 +11,7 @@ Base = declarative_base()
 # classe para definir a tabela no banco de dados
 class OrdersTable(Base):
     # nome da tabela no banco de dados
-    __tablename__ = 'pedidosfaturados_novo_extrator_20_02'
+    __tablename__ = 'pedidosfaturados_novo_extrator_21_02'
     # evita que dados duplicados sejam inseridos no banco de dados
     #__table_args__ = (UniqueConstraint('pedido_faturamento', 'id_equipamento'),)
 
@@ -245,9 +245,23 @@ class ConnectPostgresQL:
             raise e
 
 
+    def delete_all(self, table_name):
+        try:
+            table = OrdersClass(table_name).Table
 
+            with self.Session() as session:
+                session.query(table).delete()
+                session.commit()
+                print(Fore.GREEN + f'Todos os registros da tabela {table_name} excluídos com sucesso!' + Fore.RESET)
 
+        # caso ocorra algum erro, exibe o erro
+        except Exception as e:
+            raise e
 
+        # fecha a conexão com o banco de dados
+        finally:
+            if session:
+                session.close()
 
 
 
