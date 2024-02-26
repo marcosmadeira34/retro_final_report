@@ -54,8 +54,9 @@ if __name__ == "__main__":
 
             if option == 1:
                 
-                sql.delete_all('pedidosfaturados_novo_extrator_novoextrator117')
-                print(Fore.YELLOW + 'DELETANDO NOVOS PEDIDOS NO BANCO DE DADOS ...' + Fore.RESET)
+                #sql.delete_all('pedidosfaturados_novo_extrator_novoextrator117')
+                #print(Fore.YELLOW + 'DELETANDO NOVOS PEDIDOS NO BANCO DE DADOS ...' + Fore.RESET)
+                pass
 
             elif option == 2:
                 sleep(0.5)
