@@ -7,7 +7,7 @@ from openpyxl.drawing.image import Image
 import threading
 from time import sleep
 import re
-
+from colorama import Fore
 class MergeExcelReports:
      
 
@@ -66,20 +66,25 @@ class MergeExcelReports:
 
         try:
             files = [file for file in os.listdir(folder_path) if file.endswith('.xlsx')]
-            merged_data = pd.DataFrame()
+            
         except FileNotFoundError:
-            pass
+            print(Fore.RED + f'Nenhum arquivo encontrado em {folder_path}' + Fore.RESET)
 
         # Verifica se há apenas um arquivo no diretorio
         if len(files) == 1:
             print(f'Apenas um arquivo encontrado em {folder_path}')
             return
+        
+        # Dataframe vazio para armazenar os dados mesclados
+        merged_data = pd.DataFrame()       
 
-        def process_file(file):
-            nonlocal merged_data
+      
+        # iteração sobre os arquivos Excel
+        for file in files:
             file_path = os.path.join(folder_path, file)
             df = pd.read_excel(file_path, engine='openpyxl', sheet_name='CONSOLIDADO')
-            merged_data = merged_data._append(df, ignore_index=True)
+
+            merged_data = merged_data._append(df, ignore_index=True )
 
             # formatação da coluna CNPJ
             for col in merged_data['CNPJ DO CLIENTE']:
@@ -87,17 +92,7 @@ class MergeExcelReports:
                     cnpj_formatado = f"{col[:2]}.{col[2:5]}.{col[5:8]}/{col[8:12]}-{col[12:]}"
                     merged_data['CNPJ DO CLIENTE'] = merged_data['CNPJ DO CLIENTE'].replace(col, cnpj_formatado)
 
-        threads = []
-        # iteração sobre os arquivos Excel
-        for file in files:
-            thread = threading.Thread(target=process_file, args=(file,))
-            thread.start()
-            threads.append(thread)
-
-        # Espera todas as threads terminarem
-        for thread in threads:
-            thread.join()
-
+       
         if merged_data.empty:
             print(f'Nenhum dado encontrado em {folder_path}')
             return

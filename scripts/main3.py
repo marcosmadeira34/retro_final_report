@@ -10,7 +10,7 @@ ascii_banner = art.text2art("Relatorio Final")
 colored_banner = cprint(ascii_banner, 'green')
 
 #ENTRDA DOS ARQUIVOS
-extractor_file_path = r"H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\01-EXTRATOR_PEDIDOS_DE_CLIENTES" # EXTRATOR
+extractor_file_path = r"H:\01 - FATURAMENTO\99-EXTRATOR_PEDIDOS_DE_CLIENTES" # EXTRATOR
 # SAÍDA DOS ARQUIVOS
 batch_totvs_path = r'H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS' # CRIARÁ AS PASTA AQUI
 #verificar se o pedido já foi faturado no banco de dados PostgresQL
@@ -20,7 +20,7 @@ target_directory = r'H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS' 
 output_merge_path = r'C:\DataWare\data\consolidated_files\consolidated_validated\MERGE_RELATÓRIO_FINAL' # RELATÓRIO FINAL 
 source_directory = r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS' # DIRETÓRIO DE ORIGEM DOS PEDIDOS
 process_files = r'H:\01 - FATURAMENTO\04 - EXTRATORES PROCESSADOS'
-
+consolidado =  r'H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\CONSOLIDADOS'
 
 
 
@@ -53,20 +53,27 @@ if __name__ == "__main__":
             option = int(input('Digite a opção desejada: '))
 
             if option == 1:
+                
+                sql.delete_all('pedidosfaturados_novo_extrator_novoextrator117')
+                print(Fore.YELLOW + 'DELETANDO NOVOS PEDIDOS NO BANCO DE DADOS ...' + Fore.RESET)
+
+            elif option == 2:
                 sleep(0.5)
                 print(Fore.YELLOW + 'CHECANDO NOVOS PEDIDOS ...' + Fore.RESET)
                 final_report.check_and_update_orders(extractor_file_path, 'pedido_faturamento')
-                sleep(0.5)
+
+            elif option == 3:
                 print(Fore.YELLOW + 'FORMANTO ARQUIVOS....' + Fore.RESET)
                 final_report.rename_format_columns(news_orders)
-                sleep(0.5)
+                
+                
+            elif option == 4:
                 print(Fore.YELLOW + 'MOVENDO ARQUIVOS PARA DIRETÓRIO....' + Fore.RESET)
                 file_processor.move_files_to_month_subfolder(
                     directory_origin=news_orders, target_directory=target_directory)
-                sleep(0.5)
-                
-                # ETAPA DE CONSOLIDAÇÃO DOS ARQUIVOS
-                
+
+
+            elif option == 5:    
                 # # variável para armazenar a data atual
                 current_date = datetime.now()
                 # formata a data atual para o formato mm-aaaa
@@ -93,8 +100,9 @@ if __name__ == "__main__":
 
                     merge_reports.merge_excel_reports(client_folder, client_folder)       
 
-                    print(Fore.YELLOW + f'ENVIANDO ARQUIVO PARA PASTA DE PROCESSADOS EM {extractor_file_path} ...' + Fore.RESET)
-                    file_processor.move_files_to_processed_folder(
+            elif option == 6:
+                print(Fore.YELLOW + f'ENVIANDO ARQUIVO PARA PASTA DE PROCESSADOS EM {extractor_file_path} ...' + Fore.RESET)
+                file_processor.move_files_to_processed_folder(
                                     directory_origin=extractor_file_path,
                                     target_directory=process_files)
                     
@@ -102,13 +110,7 @@ if __name__ == "__main__":
                 print(Fore.LIGHTBLUE_EX + 'AUTOMAÇÃO CONCLUÍDA : ' + Fore.RESET + str(datetime.now().strftime('%d-%m-%Y_%H-%M-%S\n')))   
                             
             
-                                  
-            elif option == 2:
-                file_processor.list_all_files(news_orders)
-                final_report.rename_columns(news_orders)
-                print('Colunas renomeadas com sucesso!')
-
-            elif option == 3:
+            elif option == 80:
                 sql.create_database()
 
                 for filename in os.listdir(extractor_file_path):
@@ -178,32 +180,32 @@ if __name__ == "__main__":
                             except Exception as e:                    
                                 print(f'Erro ao inserir dados no banco de dados: {e}')
                 
-            elif option == 4:
+            elif option == 44:
                 files = file_processor.make_folders_clients(batch_totvs_path=batch_totvs_path,
                                                             extractor_path=extractor_file_path,
                                                             sheet_name="2-Resultado", col="Nome do Cliente")
             
-            elif option == 5:
+            elif option == 55:
                 sql.create_database()
 
-            elif option == 6:
+            elif option == 66:
                 file_processor.delete_new_files(files_path=news_orders)
 
-            elif option == 7:
+            elif option == 77:
                 file_processor.move_file_to_client_folder(source_directory=source_directory,
                                                           target_directory=target_directory)
             
-            elif option == 8:
+            elif option == 88:
                 final_report.rename_format_columns(news_orders)
                 print('Colunas renomeadas com sucesso!')
 
-            elif option == 9:
+            elif option == 99:
                 file_processor.accurent_billing_value(
                     r"\\10.10.4.7\Dados\Financeiro\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\02-SAÍDA_EXTRATOR\ADVANCED SERVICOS DE APOIO ADMINISTRATIV"
                 )
                 print('Valor de faturamento atualizado com sucesso!')
 
-            elif option == 10:
+            elif option == 100:
                 file_processor.move_file_to_client_folder(source_directory=r'C:\Users\marcos.silvaext\Documents',
                                                           target_directory=r'C:\Users\marcos.silvaext\Documents\pasta_arklok_destino')                
             

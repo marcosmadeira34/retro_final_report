@@ -379,7 +379,7 @@ class FinalReport:
                                        'TIPO DE OPERACAO', 'PRODUTO', 'DESCONTO', 'ÚLTIMO FATURAMENTO', 'DATA PRÓXIMO FATURAMENTO', 'DATA FIM LOCACAO',
                                        'PRAZO DO CONTRATO', 'PREVISÃO RETIRADA', 'SOLICITAÇÃO RETIRADA', 'TIPO DO MÊS', 'MÊS FIXO',
                                        'DATA DO REAJUSTE', 'FRANQUIA', 'CLASS FATURAMENTO', 'COBRA ?', 'DATA ENTRADA', 'CENTRO DE CUSTOS', 
-                                       'PEDIDO FATURAMENTO', 'EMISSÃO PEDIDO', 'QTDE PEDIDO', 'VLR UNITÁRIO PEDIDO', 'PERCENT DESCONTO', 
+                                       'EMISSÃO PEDIDO', 'QTDE PEDIDO', 'VLR UNITÁRIO PEDIDO', 'PERCENT DESCONTO', 
                                        'VLR DESCONTO', 'TES', 'NATUREZA', 'SERIE DE FATURAMENTO', 'VLR UNITÁRIO FATURAMENTO', 
                                        'CLIENTE FATURAMENTO', 'LOJA FATURAMENTO', 'NOME CLI FATURAMENTO', 'QTDE FATURAMENTO', 
                                        'ORIGEM DO DADO', 'SERIE DO EQUIPAMENTO']
@@ -393,7 +393,7 @@ class FinalReport:
                             'PERÍODO DE FATURAMENTO', 'DIAS DE LOCAÇÃO', 'VALOR UNITÁRIO', 'VALOR BRUTO', 'DATA DE ATIVAÇÃO',
                             'QUANTIDADE', 'VALOR TOTAL GERADO', 'VLR TOTAL FATURAMENTO', 
                             'NF DE FATURAMENTO',  'DATA DE FATURAMENTO', 'DATA BASE REAJUSTE', 'VALOR DE ORIGEM', 
-                            'INDEXADOR', 'CÁLCULO REAJUSTE', 'ÍNDICE APLICADO', 'ACRÉSCIMO', 'CONTRATO LEGADO']]
+                            'INDEXADOR', 'CÁLCULO REAJUSTE', 'ÍNDICE APLICADO', 'ACRÉSCIMO', 'CONTRATO LEGADO', 'PEDIDO FATURAMENTO']]
                      
                     
                     # formata células com datas para o formato dd/mm/aaaa
@@ -428,7 +428,7 @@ class FinalReport:
                      
                                         
                     # Aplicar a lógica de conversão na coluna 'VLR TOTAL FATURAMENTO'
-                    df['VLR TOTAL FATURAMENTO'] = df['VLR TOTAL FATURAMENTO'].apply(self.corrigir_valor_faturamento)
+                    #df['VLR TOTAL FATURAMENTO'] = df['VLR TOTAL FATURAMENTO'].apply(self.corrigir_valor_faturamento)
                     df['VALOR TOTAL GERADO'] = df['VALOR TOTAL GERADO'].apply(self.corrigir_valor_faturamento)
                     
 
