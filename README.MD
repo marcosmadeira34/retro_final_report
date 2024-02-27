@@ -61,6 +61,11 @@ Execute o arquivo loopmain.py
 python loopmain.py
 ```
 
+### Créditos 
+Desenvolvedor Python -> Marcos Vinicius Madeira
+Key-User -> Eliane Celeste Borges Vilela
+Área de negócios Arklok -> Faturamento
+Ano -> Nov/2023 
 
 
 
