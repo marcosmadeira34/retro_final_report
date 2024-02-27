@@ -44,22 +44,22 @@ Este projeto visa não apenas otimizar o processo de faturamento, mas também ga
 
 ### Como Executar o Projeto
 
-1. Ative o ambiente virtual na raiz do projeto:
-   
+1. Ative o ambiente virtual na raiz do projeto:   
    ```bash
    .\venv\Scripts\activate
-   ```
-   
-
-   
-Instale as dependências
+   ```   
+2. Instale as dependências
+```bash
 pip install -r requirements.txt
-
-Navegue até a pasta 'scripts'
+```
+3. Navegue até a pasta 'scripts'
+```bash
 cd final_report\scripts
-
+```
 Execute o arquivo loopmain.py
+```bash
 python loopmain.py
+```
 
 
 
