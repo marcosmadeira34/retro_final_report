@@ -30,6 +30,8 @@ No que diz respeito às etapas específicas da pipeline:
 4. **Geração do Relatório Final:**
    - Assegura que todas as informações essenciais estejam incluídas no relatório final de faturamento.
 
+4. **Consolidação de Relatório:**
+   - Consolidar todos os pedidos em um único arquivo para envio ao cliente pré-validar o faturamento.
 ## Melhorias Adicionais
 
 Para aprimorar ainda mais o raciocínio, seria útil considerar:
