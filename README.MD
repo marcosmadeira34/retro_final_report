@@ -42,11 +42,14 @@ Para aprimorar ainda mais o raciocínio, seria útil considerar:
 
 Este projeto visa não apenas otimizar o processo de faturamento, mas também garantir a qualidade e confiabilidade das informações fornecidas ao cliente.
 
-## Como executar o projeto
+### Como Executar o Projeto
 
-Ative o ambiente virtual na raiz do projeto
-.\venv\Scripts\activate
+1. Ative o ambiente virtual na raiz do projeto:
+   
+   ```bash
+   .\venv\Scripts\activate
 
+   
 Instale as dependências
 pip install -r requirements.txt
 
