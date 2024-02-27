@@ -82,7 +82,11 @@ class MergeExcelReports:
         # iteração sobre os arquivos Excel
         for file in files:
             file_path = os.path.join(folder_path, file)
-            df = pd.read_excel(file_path, engine='openpyxl', sheet_name='CONSOLIDADO')
+            try:
+                df = pd.read_excel(file_path, engine='openpyxl', sheet_name='CONSOLIDADO')
+            except Exception as e:
+                print(f'Erro ao ler o arquivo {file_path}: {e}')
+                continue
 
             merged_data = merged_data._append(df, ignore_index=True )
 
