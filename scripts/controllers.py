@@ -1008,6 +1008,9 @@ class FileProcessor:
         # obtém os arquivos xlsx no subdiretório principal
         files_to_move = [file for file in os.listdir(directory_origin) if file.endswith('.xlsx') and not file.startswith('~$')]
         
+        # variável para armazenar o dia atual
+        #day = f'DIA_{datetime.now().day}'
+        
         # cria a subpasta do mês e ano
         current_date = datetime.now()
         # formata a data atual para o formato mm-aaaa

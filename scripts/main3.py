@@ -10,7 +10,7 @@ ascii_banner = art.text2art("Relatorio Final")
 colored_banner = cprint(ascii_banner, 'green')
 
 #ENTRDA DOS ARQUIVOS
-extractor_file_path = r"H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\01-EXTRATOR_PEDIDOS_DE_CLIENTES" # EXTRATOR
+extractor_file_path = r"H:\01 - FATURAMENTO\99-EXTRATOR_PEDIDOS_DE_CLIENTES" # EXTRATOR
 # SAÍDA DOS ARQUIVOS
 batch_totvs_path = r'H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS' # CRIARÁ AS PASTA AQUI
 #verificar se o pedido já foi faturado no banco de dados PostgresQL
@@ -76,6 +76,10 @@ if __name__ == "__main__":
 
 
             elif option == 5:    
+
+               
+                # variável para armazenar o dia atual
+                #day = f'DIA_{datetime.now().day}'
                 # # variável para armazenar a data atual
                 current_date = datetime.now()
                 # formata a data atual para o formato mm-aaaa

@@ -86,12 +86,21 @@ class MergeExcelReports:
 
             merged_data = merged_data._append(df, ignore_index=True )
 
-            # formatação da coluna CNPJ
-            for col in merged_data['CNPJ DO CLIENTE']:
-                if isinstance(col, str) and len(col) == 14 and col.isdigit():
-                    cnpj_formatado = f"{col[:2]}.{col[2:5]}.{col[5:8]}/{col[8:12]}-{col[12:]}"
-                    merged_data['CNPJ DO CLIENTE'] = merged_data['CNPJ DO CLIENTE'].replace(col, cnpj_formatado)
+            # formata células com cnpj para o formato xx.xxx.xxx/xxxx-xx
+            cols_cnpj = ['CNPJ DO CLIENTE', 'CNPJ DE FATURAMENTO']
 
+            # formatação da coluna CNPJ
+            for col in cols_cnpj:
+                # verifica se a coluna é do tipo string
+                if pd.api.types.is_string_dtype(merged_data[col]):
+                    merged_data[col] = merged_data[col].str.replace(r'(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})', r'\1.\2.\3/\4-\5')
+                else:
+                    try:
+                        # converte a coluna para string
+                        merged_data[col] = merged_data[col].astype(str).str.replace(r'(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})', r'\1.\2.\3/\4-\5')
+                    except Exception as e:
+                        print(f'Erro ao formatar a coluna {col}: {e}')
+                        
        
         if merged_data.empty:
             print(f'Nenhum dado encontrado em {folder_path}')
@@ -129,7 +138,6 @@ class MergeExcelReports:
                     {'VALOR TOTAL GERADO': 'sum', 'VLR TOTAL FATURAMENTO': 'sum'})
                 # renomear as colunas
                 sintese_df = sintese_df.rename(columns={'VLR TOTAL FATURAMENTO': 'VALOR TOTAL FATURADO'})
-
                 
 
                 # formatação da planilha "CONSOLIDADO"

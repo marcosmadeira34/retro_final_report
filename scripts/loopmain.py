@@ -43,16 +43,22 @@ if __name__ == "__main__":
     # LOOP PRINCIPAL
     while True:        
         sleep(0.5)
-        print(Fore.YELLOW + 'CHECANDO NOVOS PEDIDOS ...' + Fore.RESET)
+        
+        print(Fore.GREEN + 'INICIANDO CHECK NOVOS PEDIDOS NO EXTRATOR ...' + Fore.RESET)
         final_report.check_and_update_orders(extractor_file_path, 'pedido_faturamento')
-        sleep(0.5)
-        print(Fore.YELLOW + 'FORMANTANDO ARQUIVOS....' + Fore.RESET)
+        print(Fore.YELLOW + 'PEDIDOS CHECADOS E ATUALIZADOS NO BANCO DE DADOS!' + Fore.RESET)
+        sleep(0.8)
+
+        print(Fore.YELLOW + 'INICIANDO FORMANTAÇÃO DOS ARQUIVOS....' + Fore.RESET)
         final_report.rename_format_columns(news_orders)
-        sleep(0.5)
-        print(Fore.YELLOW + 'MOVENDO ARQUIVOS PARA DIRETÓRIO....' + Fore.RESET)
+        print(Fore.YELLOW + 'ARQUIVOS FORMATADOS, PRONTO PARA SEREM MOVIDOS!' + Fore.RESET)
+        sleep(0.8)
+        
+        print(Fore.YELLOW + 'INICIANDO MOVIMENTAÇÃO DE ARQUIVOS PARA SEU DESTINO....' + Fore.RESET)
         file_processor.move_files_to_month_subfolder(
             directory_origin=news_orders, target_directory=target_directory)
-        sleep(0.5)
+        print(Fore.YELLOW + 'ARQUIVOS MOVIDOS PARA SEU DESTINO!' + Fore.RESET)
+        sleep(2)
         
         # ETAPA DE CONSOLIDAÇÃO DOS ARQUIVOS
                 
@@ -77,22 +83,23 @@ if __name__ == "__main__":
                 continue    
 
             # Chama a função para mesclar os relatórios Excel na pasta do cliente
-            print(Fore.YELLOW + f'CONSOLIDANDO ARQUIVOS EM {client_folder} ...' + Fore.RESET)
+            print(Fore.GREEN + f'INICIANDO CONSOLIDAÇÃO DE ARQUIVOS EM {client_folder} ...' + Fore.RESET)
             # verifica se algum arquivo no diretório inicia com "CONSOLIDADO"
             if any(file.startswith('CONSOLIDADO') for file in os.listdir(client_folder)):
                 print(Fore.RED + 'Arquivo consolidado já existe!' + Fore.RESET)
                 continue
 
 
-            merge_reports.merge_excel_reports(client_folder, client_folder)       
+            merge_reports.merge_excel_reports(client_folder, client_folder)
+            print(Fore.YELLOW + f'ARQUIVOS CONSOLIDADOS NO DESTINO...' + Fore.RESET)       
 
-            print(Fore.YELLOW + f'ENVIANDO ARQUIVO PARA PASTA DE PROCESSADOS EM {extractor_file_path} ...' + Fore.RESET)
-            file_processor.move_files_to_processed_folder(
-                            directory_origin=extractor_file_path,
-                            target_directory=process_files)
+            #print(Fore.YELLOW + f'ENVIANDO ARQUIVO PARA PASTA DE PROCESSADOS EM {extractor_file_path} ...' + Fore.RESET)
+            #file_processor.move_files_to_processed_folder(
+              #              directory_origin=extractor_file_path,
+               #             target_directory=process_files)
             
         # #file_processor.delete_xlsx(extractor_file_path)       
-        print(Fore.LIGHTBLUE_EX + 'AUTOMAÇÃO CONCLUÍDA : ' + Fore.RESET + str(datetime.now().strftime('%d-%m-%Y_%H-%M-%S\n')))
+        print(Fore.LIGHTBLUE_EX + 'AUTOMAÇÃO DE RELATÓRIOS PRÉ-FATURAMENTO CONCLUÍDO EM: ' + Fore.RESET + str(datetime.now().strftime('%d-%m-%Y_%H-%M-%S\n')))
 
 
               
