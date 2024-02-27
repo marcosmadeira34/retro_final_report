@@ -47,6 +47,9 @@ Este projeto visa não apenas otimizar o processo de faturamento, mas também ga
 Ative o ambiente virtual na raiz do projeto
 .\venv\Scripts\activate
 
+Instale as dependências
+pip install -r requirements.txt
+
 Navegue até a pasta 'scripts'
 cd final_report\scripts
 
