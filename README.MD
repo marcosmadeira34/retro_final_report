@@ -48,6 +48,8 @@ Este projeto visa não apenas otimizar o processo de faturamento, mas também ga
    
    ```bash
    .\venv\Scripts\activate
+   ```
+   
 
    
 Instale as dependências
