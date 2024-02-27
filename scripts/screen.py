@@ -1,6 +1,7 @@
 import streamlit as st 
 import pandas as pd
 from controllers import TesteStreamlit, FinalReport
+from consolidador import MergeExcelReports
 import time
 
 st.set_page_config(
@@ -12,6 +13,7 @@ exit_path = r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_P
 host_postgres = 'postgresql://postgres:123456789@localhost:5432/postgres'
 instance = TesteStreamlit(host_postgres)
 final_report = FinalReport(host_postgres)
+consolidador = MergeExcelReports()
 
 st.title('Validador de arquivo extrator')
 
@@ -57,6 +59,11 @@ col1, col2 = st.columns(2)
 
 
 upload_file = st.sidebar.file_uploader('Faça o upload aqui do arquivo', type='xlsx')
+
+# quero ao clicar no botão consolidar na sidebar, aparecça na coluna 2 duas caixa file_uploader, uma para o diretorio de entrada e outro para o diretorio de saída
+# e ao clicar no botão consolidar, o arquivo seja consolidado e movido para o diretorio de saída
+
+
 
 if upload_file is None:
     st.info('Aguardando upload do arquivo...', icon="ℹ️")
