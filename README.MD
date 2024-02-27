@@ -20,7 +20,7 @@ No que diz respeito às etapas específicas da pipeline:
 
 1. **Identificação de Novos Pedidos:**
    - Essa fase é crucial e pode ser realizada tanto manualmente pelo analista quanto automaticamente pelo ERP.
-   
+
 2. **Integração de Informações do Cliente:**
    - Os novos pedidos identificados são integrados às demais informações necessárias do cliente.
 
@@ -41,3 +41,18 @@ Para aprimorar ainda mais o raciocínio, seria útil considerar:
   - Fortalecer a confiança do cliente no sistema automatizado.
 
 Este projeto visa não apenas otimizar o processo de faturamento, mas também garantir a qualidade e confiabilidade das informações fornecidas ao cliente.
+
+## Como executar o projeto
+
+Ative o ambiente virtual na raiz do projeto
+.\venv\Scripts\activate
+
+Navegue até a pasta 'scripts'
+cd final_report\scripts
+
+Execute o arquivo loopmain.py
+python loopmain.py
+
+
+
+
