@@ -19,11 +19,11 @@ Os benefícios da automação no projeto incluem:
 No que diz respeito às etapas específicas da pipeline:
 
 1. **Identificação de Novos Pedidos:**
-
    - Essa fase é crucial e pode ser realizada tanto manualmente pelo analista quanto automaticamente pelo ERP.
+   
 2. **Integração de Informações do Cliente:**
-
    - Os novos pedidos identificados são integrados às demais informações necessárias do cliente.
+
 3. **Busca e Agregação de Dados:**
    - Envolve a busca e agregação de dados relevantes de diversas fontes.
 
