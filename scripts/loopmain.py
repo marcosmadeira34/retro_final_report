@@ -18,8 +18,8 @@ extractor_file_path = r"/home/administrator/WindowsShare/01 - FATURAMENTO/01 - C
 batch_totvs_path = r'/home/administrator/WindowsShare/01 - FATURAMENTO/01 - CLIENTES - CONTROLE - 2024 TOTVS' # CRIARÁ AS PASTA AQUI
 
 # DIRETÓRIO DE TRATAMENTO DOS ARQUIVOS (TRANSFORMATION)
-news_orders = r'/home/administrator/WindowsShare/01 - FATURAMENTO/03 - DATA_RAW' # NOVOS PEDIDOS IDENTIFICADOS NO EXTRATOR
-source_directory = r'/home/administrator/WindowsShare/01 - FATURAMENTO/03 - DATA_RAW' # DIRETÓRIO DE ORIGEM DOS PEDIDOS
+news_orders = r'/home/administrator/WindowsShare/01 - FATURAMENTO/03 - DATA_RAW_RETROATIVOS' # NOVOS PEDIDOS IDENTIFICADOS NO EXTRATOR
+source_directory = r'/home/administrator/WindowsShare/01 - FATURAMENTO/03 - DATA_RAW_RETROATIVOS' # DIRETÓRIO DE ORIGEM DOS PEDIDOS
 target_directory = r'/home/administrator/WindowsShare/01 - FATURAMENTO/01 - CLIENTES - CONTROLE - 2024 TOTVS/RETROATIVOS GERADOS' # DIRETÓRIO DE DESTINO DOS PEDIDOS
 
 # DIRETÓRIO DE ARQUIVOS PROCESSADOS (DRAFT)
@@ -75,7 +75,7 @@ if __name__ == "__main__":
             client_folder = os.path.join(target_directory, subfolder, month_year)
 
             if not os.path.exists(client_folder) and not client_folder.startswith('01-EXTRATOR_PEDIDOS_DE_CLIENTES')\
-                and not client_folder.startswith('01-GERAR RETROATIVOS') and not client_folder.startswith('RETROATIVOS GERADOS'):
+                and not client_folder.startswith('01-GERAR RETROATIVOS'):
                 os.makedirs(client_folder)
                 print(f'Criando pasta para o cliente {subfolder} em {client_folder} ...')
 
