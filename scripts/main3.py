@@ -10,13 +10,13 @@ ascii_banner = art.text2art("Relatorio Final")
 colored_banner = cprint(ascii_banner, 'green')
 
 #ENTRDA DOS ARQUIVOS
-extractor_file_path = r"H:\01 - FATURAMENTO\99-EXTRATOR_PEDIDOS_DE_CLIENTES" # EXTRATOR
+extractor_file_path = r"H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\01-GERAR RETROATIVOS" # EXTRATOR
 # SAÍDA DOS ARQUIVOS
 batch_totvs_path = r'H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS' # CRIARÁ AS PASTA AQUI
 #verificar se o pedido já foi faturado no banco de dados PostgresQL
 invoiced_orders = r'C:\DataWare\data\consolidated_files\consolidated_validated\PEDIDOS_FATURADOS' # PEDIDOS FATURADOS NO BANCO DE DADOS
 news_orders = r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS' # NOVOS PEDIDOS IDENTIFICADOS NO EXTRATOR
-target_directory = r'H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS' # DIRETÓRIO DE DESTINO DOS PEDIDOS
+target_directory = r'H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\RETROATIVOS GERADOS' # DIRETÓRIO DE DESTINO DOS PEDIDOS
 output_merge_path = r'C:\DataWare\data\consolidated_files\consolidated_validated\MERGE_RELATÓRIO_FINAL' # RELATÓRIO FINAL 
 source_directory = r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS' # DIRETÓRIO DE ORIGEM DOS PEDIDOS
 process_files = r'H:\01 - FATURAMENTO\04 - EXTRATORES PROCESSADOS'
@@ -92,7 +92,8 @@ if __name__ == "__main__":
                     # Caminho para a pasta do cliente
                     client_folder = os.path.join(target_directory, subfolder, month_year)
 
-                    if not os.path.exists(client_folder):
+                    if not os.path.exists(client_folder) and not client_folder.startswith('01-EXTRATOR_PEDIDOS_DE_CLIENTES')\
+                        and not client_folder.startswith('01-GERAR RETROATIVOS') and not client_folder.startswith('RETROATIVOS GERADOS'):
                         os.makedirs(client_folder)
                         print(f'Criando pasta para o cliente {subfolder} em {client_folder} ...')
 

@@ -167,8 +167,8 @@ class FinalReport:
                         # Verifica se há novos pedidos antes de continuar
                         if not new_orders_df.empty:
                             # caminho do diretório NOVOS_PEDIDOS
-                            #path = r'/home/administrator/WindowsShare/01 - FATURAMENTO/03 - DATA_RAW'
-                            path = r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS'
+                            path = r'/home/administrator/WindowsShare/01 - FATURAMENTO/03 - DATA_RAW'
+                            #path = r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS'
                             # cria o diretório NOVOS_PEDIDOS se não existir
                             os.makedirs(path, exist_ok=True)
                             # percorre o DataFrame agrupando os pedidos por cliente
@@ -514,14 +514,15 @@ class FinalReport:
                             for cell in row:
                                 cell.border = Border(left=Side(border_style='thin'), right=Side(border_style='thin'), 
                                                     top=Side(border_style='thin'), bottom=Side(border_style='thin'))
-                                
+                                print(f'Arquivo {filename} formatado com sucesso.')
 
                         # formatar largura das colunas
                         writer.sheets['SÍNTESE'].column_dimensions['A'].width = 20
                         writer.sheets['SÍNTESE'].column_dimensions['B'].width = 15
                         writer.sheets['SÍNTESE'].column_dimensions['C'].width = 31
                         writer.sheets['SÍNTESE'].column_dimensions['D'].width = 23
-                        writer.sheets['SÍNTESE'].column_dimensions['E'].width = 23           
+                        writer.sheets['SÍNTESE'].column_dimensions['E'].width = 23
+
 
                     #print(f'Arquivos formatados com sucesso em {file_path}')
 
@@ -1135,6 +1136,7 @@ class TesteStreamlit:
             # Identifica os pedidos ausentes
             new_orders = set(extract_df[col_lower]) - existing_orders
             print(f'Total de novos pedidos no extrator: {len(new_orders)}')
+            
 
             if len(new_orders) > 0:
                 # Reinicializa a variável new_orders_df

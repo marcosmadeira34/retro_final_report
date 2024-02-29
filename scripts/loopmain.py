@@ -12,7 +12,7 @@ colored_banner = cprint(ascii_banner, 'green')
 
 
 # DIRETÓRIO DE ENTRADA DOS ARQUIVOS EXTRATORES (EXTRACTION)
-extractor_file_path = r"/home/administrator/WindowsShare/01 - FATURAMENTO/01 - CLIENTES - CONTROLE - 2024 TOTVS/01-EXTRATOR_PEDIDOS_DE_CLIENTES" # EXTRATOR
+extractor_file_path = r"/home/administrator/WindowsShare/01 - FATURAMENTO/01 - CLIENTES - CONTROLE - 2024 TOTVS/01-GERAR RETROATIVOS" # EXTRATOR
 
 # DIRETÓRIOS DE SAÍDA DOS ARQUIVOS CRIADOS (LOADING)
 batch_totvs_path = r'/home/administrator/WindowsShare/01 - FATURAMENTO/01 - CLIENTES - CONTROLE - 2024 TOTVS' # CRIARÁ AS PASTA AQUI
@@ -20,7 +20,7 @@ batch_totvs_path = r'/home/administrator/WindowsShare/01 - FATURAMENTO/01 - CLIE
 # DIRETÓRIO DE TRATAMENTO DOS ARQUIVOS (TRANSFORMATION)
 news_orders = r'/home/administrator/WindowsShare/01 - FATURAMENTO/03 - DATA_RAW' # NOVOS PEDIDOS IDENTIFICADOS NO EXTRATOR
 source_directory = r'/home/administrator/WindowsShare/01 - FATURAMENTO/03 - DATA_RAW' # DIRETÓRIO DE ORIGEM DOS PEDIDOS
-target_directory = r'/home/administrator/WindowsShare/01 - FATURAMENTO/01 - CLIENTES - CONTROLE - 2024 TOTVS' # DIRETÓRIO DE DESTINO DOS PEDIDOS
+target_directory = r'/home/administrator/WindowsShare/01 - FATURAMENTO/01 - CLIENTES - CONTROLE - 2024 TOTVS/RETROATIVOS GERADOS' # DIRETÓRIO DE DESTINO DOS PEDIDOS
 
 # DIRETÓRIO DE ARQUIVOS PROCESSADOS (DRAFT)
 process_files = r'/home/administrator/WindowsShare/01 - FATURAMENTO/04 - EXTRATORES PROCESSADOS'
@@ -74,7 +74,8 @@ if __name__ == "__main__":
             # Caminho para a pasta do cliente
             client_folder = os.path.join(target_directory, subfolder, month_year)
 
-            if not os.path.exists(client_folder):
+            if not os.path.exists(client_folder) and not client_folder.startswith('01-EXTRATOR_PEDIDOS_DE_CLIENTES')\
+                and not client_folder.startswith('01-GERAR RETROATIVOS') and not client_folder.startswith('RETROATIVOS GERADOS'):
                 os.makedirs(client_folder)
                 print(f'Criando pasta para o cliente {subfolder} em {client_folder} ...')
 
