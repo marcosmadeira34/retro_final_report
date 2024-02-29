@@ -15,10 +15,10 @@ extractor_file_path = r"H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTV
 batch_totvs_path = r'H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS' # CRIARÁ AS PASTA AQUI
 #verificar se o pedido já foi faturado no banco de dados PostgresQL
 invoiced_orders = r'C:\DataWare\data\consolidated_files\consolidated_validated\PEDIDOS_FATURADOS' # PEDIDOS FATURADOS NO BANCO DE DADOS
-news_orders = r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS' # NOVOS PEDIDOS IDENTIFICADOS NO EXTRATOR
+news_orders = r'H:\01 - FATURAMENTO\03 - DATA_RAW_RETROATIVOS' # NOVOS PEDIDOS IDENTIFICADOS NO EXTRATOR
 target_directory = r'H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\RETROATIVOS GERADOS' # DIRETÓRIO DE DESTINO DOS PEDIDOS
 output_merge_path = r'C:\DataWare\data\consolidated_files\consolidated_validated\MERGE_RELATÓRIO_FINAL' # RELATÓRIO FINAL 
-source_directory = r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS' # DIRETÓRIO DE ORIGEM DOS PEDIDOS
+source_directory = r'H:\01 - FATURAMENTO\03 - DATA_RAW_RETROATIVOS' # DIRETÓRIO DE ORIGEM DOS PEDIDOS
 process_files = r'H:\01 - FATURAMENTO\04 - EXTRATORES PROCESSADOS'
 consolidado =  r'H:\01 - FATURAMENTO\01 - CLIENTES - CONTROLE - 2024 TOTVS\CONSOLIDADOS'
 
@@ -76,7 +76,7 @@ if __name__ == "__main__":
 
 
             elif option == 5:    
-                               
+
                 # variável para armazenar o dia atual
                 #day = f'DIA_{datetime.now().day}'
                 # # variável para armazenar a data atual
