@@ -153,7 +153,7 @@ class FinalReport:
                         f'SELECT DISTINCT {col} FROM {OrdersTable.__tablename__}', self.db_connection.engine)[col])
 
                     # Identifica os pedidos ausentes
-                    new_orders = set(extract_df[col_lower]) - existing_orders
+                    new_orders = set(extract_df[col_lower])
                     print(f'Total de novos pedidos no extrator: {len(new_orders)} | Arquivo {filename}')
                     
                     
@@ -167,8 +167,8 @@ class FinalReport:
                         # Verifica se há novos pedidos antes de continuar
                         if not new_orders_df.empty:
                             # caminho do diretório NOVOS_PEDIDOS
-                            path = r'/home/administrator/WindowsShare/01 - FATURAMENTO/03 - DATA_RAW'
-                            #path = r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS'
+                            #path = r'/home/administrator/WindowsShare/01 - FATURAMENTO/03 - DATA_RAW'
+                            path = r'C:\DataWare\data\consolidated_files\consolidated_validated\NOVOS_PEDIDOS'
                             # cria o diretório NOVOS_PEDIDOS se não existir
                             os.makedirs(path, exist_ok=True)
                             # percorre o DataFrame agrupando os pedidos por cliente
@@ -189,7 +189,7 @@ class FinalReport:
                             try:
                                 new_orders_df = new_orders_df.rename(columns={'cálculo_reajuste': 'calculo_reajuste'})
 
-                                new_orders_df.to_sql(OrdersTable.__tablename__, self.db_connection.engine, if_exists='append', index=False, method='multi')
+                                new_orders_df.to_sql(OrdersTable.__tablename__, self.db_connection.engine, if_exists='replace', index=False, method='multi')
                                 print(Fore.GREEN + 'Banco de dados atualizado com novos pedidos' + Fore.RESET)
                             except IntegrityError as e:
                                 print('Erro ao atualizar o banco de dados:', e)
@@ -514,7 +514,7 @@ class FinalReport:
                             for cell in row:
                                 cell.border = Border(left=Side(border_style='thin'), right=Side(border_style='thin'), 
                                                     top=Side(border_style='thin'), bottom=Side(border_style='thin'))
-                                print(f'Arquivo {filename} formatado com sucesso.')
+                                print(f'Formatando arquivo {filename}')
 
                         # formatar largura das colunas
                         writer.sheets['SÍNTESE'].column_dimensions['A'].width = 20
@@ -1061,7 +1061,6 @@ class FileProcessor:
 
 
                       
-
     # função para mover arquivos para diretório de processados simples
     def move_files_to_processed_folder(self, directory_origin, target_directory):
         # obtém os arquivos xlsx no subdiretório principal
@@ -1091,144 +1090,3 @@ class FileProcessor:
 
   
         
-class TesteStreamlit:
-    def __init__(self, host):
-        # Crie uma instância de ConnectPostgresQL usando o host do seu banco de dados PostgreSQL
-        self.db_connection = ConnectPostgresQL(host)
-        self.session = self.db_connection.Session()
-
-
-    def check_and_update_orders_streamlit(self, uploaded_file:file_uploader, col, progress_callback=None):
-        start = time.time()
-        """Método para verificar e atualizar pedidos ausentes no banco de dados"""
-
-        try:
-            # Carrega o arquivo fornecido pelo usuário
-            extract_df = pd.read_excel(uploaded_file, sheet_name='2-Resultado', engine='openpyxl', header=1)
-
-            # verifica se a coluna "Nome do Cliente" esta presente no indice 1(2ª linha)
-            if 'Pedido Faturamento' in extract_df.iloc[1].values:
-                extract_df.columns = extract_df.iloc[1]
-
-            # Padroniza o nome da coluna para minúsculas e substitui espaços por underscore
-            extract_df.columns = extract_df.columns.str.lower().str.replace(' ', '_').str.replace('.', '') \
-                .str.replace('-', '') \
-                .str.replace('ç', 'c') \
-                .str.replace('cálculo_reajuste', 'calculo_reajuste')  # Remove o acento "´"
-
-            # Verifica se a coluna existe no arquivo
-            col_lower = col.lower().replace(' ', '_')
-            if col_lower not in extract_df.columns:
-                print(f'Coluna {col} não encontrada no arquivo')
-                return
-
-            # Converte a coluna PEDIDO para numérico
-            extract_df[col_lower] = pd.to_numeric(extract_df[col_lower], errors='coerce')
-            print(f'Total de registros no extrator: {len(extract_df)}')
-
-            # Filtra o DataFrame para incluir apenas os pedidos mais recentes
-            extract_df = extract_df[extract_df[col_lower] >= 0]
-
-            # Carrega os pedidos já existentes no banco de dados, convertendo a coluna para inteiro
-            existing_orders = set(int(order) for order in pd.read_sql_query(
-                f'SELECT DISTINCT {col} FROM {OrdersTable.__tablename__}', self.db_connection.engine)[col])
-
-            # Identifica os pedidos ausentes
-            new_orders = set(extract_df[col_lower]) - existing_orders
-            print(f'Total de novos pedidos no extrator: {len(new_orders)}')
-            
-
-            if len(new_orders) > 0:
-                # Reinicializa a variável new_orders_df
-                new_orders_df = pd.DataFrame()
-
-                # Cria um DataFrame apenas com os pedidos ausentes
-                new_orders_df = extract_df[extract_df[col_lower].isin(new_orders)].copy()
-
-                # Verifica se há novos pedidos antes de continuar
-                if not new_orders_df.empty:
-                    # caminho do diretório NOVOS_PEDIDOS
-                    path = r'/home/administrator/WindowsShare/01 - FATURAMENTO/03 - DATA_RAW'
-                    # cria o diretório NOVOS_PEDIDOS se não existir
-                    os.makedirs(path, exist_ok=True)
-                    # percorre o DataFrame agrupando os pedidos por cliente
-                    for order_number, order_group in new_orders_df.groupby(col_lower):
-                        # remove caracteres inválidos do nome do cliente e cria o nome do arquivo
-                        client_name_valid = order_group['nome_do_cliente'].iloc[0].translate(
-                            str.maketrans('', '', r'\/:*?"<>|'))
-                        # define o nome e cria o arquivo
-                        file_name = f'{order_number}_{client_name_valid}.xlsx'
-                        # caminho completo do arquivo para salvar
-                        file_path = os.path.join(path, file_name)
-                        # salva o arquivo em excel
-                        order_group.to_excel(file_path, sheet_name='CONSOLIDADO', index=False, engine='openpyxl')
-                        print(f'Novo arquivo {file_name} criado.')
-
-                        # Atualize o progresso
-                        if progress_callback is not None:
-                            progress_callback((len(new_orders_df) / len(new_orders)) * 100)
-
-                    # Atualiza o banco de dados com os pedidos ausentes
-                    print('Atualizando banco de dados....!')
-                    try:
-                        new_orders_df = new_orders_df.rename(columns={'cálculo_reajuste': 'calculo_reajuste'})
-
-                        new_orders_df.to_sql(OrdersTable.__tablename__, self.db_connection.engine, if_exists='append', index=False, method='multi')
-                        print(Fore.GREEN + 'Banco de dados atualizado com novos pedidos' + Fore.RESET)
-                    except IntegrityError as e:
-                        print('Erro ao atualizar o banco de dados:', e)
-
-                    # pula o processamento dos clientes abaixo (grandes clientes)
-                    special_clients = ['teste']
-
-                    def save_order_excel(order, project):
-                        order_df = extract_df[extract_df[col_lower] == order]
-                        
-                        if not order_df.empty:
-                            client_name = order_df['CLIENTE'].iloc[0]
-                            
-                            if client_name in special_clients:
-                                print(f'Relatório {client_name} será gerado manualmente')
-                                return
-
-                            client_name_safe = re.sub(r'[^a-zA-Z0-9_]', '_', unidecode.unidecode(client_name))
-                            sheet_names = ['LAVORO', 'CONSOLIDADO']
-
-                            # itera sobre as sheets do arquivo
-                            for sheet in sheet_names:
-                                # Define o nome do arquivo no padrão desejado, incluindo o número do projeto
-                                file_name = f'{project}_{order}_{client_name_safe}.xlsx'
-                                # Caminho completo do arquivo para salvar
-                                file_path = os.path.join(path, file_name)
-                                # Salva o arquivo em excel
-                                order_df.to_excel(file_path, sheet_name=sheet, index=False, engine='openpyxl')
-                                print(f'Arquivo {file_name} criado.')
-
-                                # Atualize o progresso
-                                if progress_callback is not None:
-                                    progress_callback((len(new_orders_df) / len(new_orders)) * 100)
-                                    
-
-                    with ThreadPoolExecutor() as executor:
-                        executor.map(lambda order: save_order_excel(order, 'projeto'), new_orders)
-
-                    print(f'Pedidos salvos no diretório NOVOS_PEDIDOS')
-                    print('Verificação e atualização concluídas.\n')
-                    end = time.time()
-                    #print(f'Tempo de execução do código: {end - start}')
-
-                else:
-                    print('Nenhum pedido novo encontrado.\n')
-
-        except PermissionError as e:
-            print(f"Erro de permissão ao acessar o arquivo: {e}")
-            print('Corrija as permissões e tente novamente.')
-            return False
-        except Exception as e:
-            print(f"Erro ao processar arquivo: {e}")
-            return False
-
-    
-
-
-    

@@ -76,8 +76,7 @@ if __name__ == "__main__":
 
 
             elif option == 5:    
-
-               
+                               
                 # variável para armazenar o dia atual
                 #day = f'DIA_{datetime.now().day}'
                 # # variável para armazenar a data atual

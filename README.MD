@@ -1,4 +1,4 @@
-# Relatório de Faturamento Automatizado
+# Relatório de Faturamento Automatizado (Retroativos)
 O objetivo deste projeto é automatizar a criação do relatório final de faturamento a ser enviado mensalmente ao cliente. O departamento de faturamento enfrenta desafios na elaboração do relatório padrão quando o ambiente Totvs está em produção. Atualmente, o relatório emitido pelo Totvs não contém todas as informações essenciais para o cliente.
 
 # Funcionalidades e Objetivos

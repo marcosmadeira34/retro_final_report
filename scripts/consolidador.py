@@ -88,14 +88,9 @@ class MergeExcelReports:
                 print(f'Erro ao ler o arquivo {file_path}: {e}')
                 continue
 
-            cont = 0    
             merged_data = merged_data._append(df, ignore_index=True )
-            print(f'Arquivo {file} adicionado ao consolidado com sucesso!')
-            cont += 1
-            print(f'Quantidade de arquivos consolidados: {cont}')
-
+            #print(f'Arquivo {file} adicionado ao consolidado com sucesso!')
             
-
             # formata células com cnpj para o formato xx.xxx.xxx/xxxx-xx
             cols_cnpj = ['CNPJ DO CLIENTE', 'CNPJ DE FATURAMENTO']
 
