@@ -95,9 +95,9 @@ if __name__ == "__main__":
             print(Fore.YELLOW + f'ARQUIVOS CONSOLIDADOS NO DESTINO...' + Fore.RESET)       
 
             #print(Fore.YELLOW + f'ENVIANDO ARQUIVO PARA PASTA DE PROCESSADOS EM {extractor_file_path} ...' + Fore.RESET)
-            #file_processor.move_files_to_processed_folder(
-              #              directory_origin=extractor_file_path,
-               #             target_directory=process_files)
+            file_processor.move_files_to_processed_folder(
+                            directory_origin=extractor_file_path,
+                            target_directory=process_files)
             
         # #file_processor.delete_xlsx(extractor_file_path)       
         print(Fore.LIGHTBLUE_EX + 'AUTOMAÇÃO DE RELATÓRIOS PRÉ-FATURAMENTO CONCLUÍDO EM: ' + Fore.RESET + str(datetime.now().strftime('%d-%m-%Y_%H-%M-%S\n')))

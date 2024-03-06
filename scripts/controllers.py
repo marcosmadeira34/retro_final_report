@@ -1045,19 +1045,20 @@ class FileProcessor:
             if os.path.exists(destination_file_path):
                 print(f'Arquivo {file_to_move} já existe no diretório {current_file_path_with_month}')
                 os.remove(destination_file_path)
-            
-            # move o arquivo para o diretório correspondente ao nome do cliente no caso negativo
-            try:
-                shutil.move(current_file_path, current_file_path_with_month)
-                print(f'Arquivo {file_to_move} movido para {current_file_path_with_month}')
-            
-            except PermissionError as e:
-                print(f'Arquivo {file_to_move} está aberto: {e}')
-                return False
-            
-            except OSError as e:
-                print(f'Erro ao mover o arquivo {file_to_move} possívelmente aberto: {e}')
-                return False
+                print(f'Arquivo {file_to_move} removido com sucesso!')
+            else:
+                # move o arquivo para o diretório correspondente ao nome do cliente no caso negativo
+                try:
+                    shutil.move(current_file_path, current_file_path_with_month)
+                    print(f'Arquivo {file_to_move} movido para {current_file_path_with_month}')
+                
+                except PermissionError as e:
+                    print(f'Arquivo {file_to_move} está aberto: {e}')
+                    return False
+                
+                except OSError as e:
+                    print(f'Erro ao mover o arquivo {file_to_move} possívelmente aberto: {e}')
+                    return False
 
 
                       
